@@ -230,3 +230,23 @@ h2 { font-size: 1rem; margin: 0; }
 .hbar .bar { margin: 0; }
 pre.excerpt { white-space: pre-wrap; background: var(--surface-2); border: 1px solid var(--line); padding: 12px; border-radius: 10px; font-size: 0.85rem; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 지난달 결산 · 무지출 */
+.recap { background: var(--surface-2); border-color: var(--line-strong); }
+.recap .budget-row { padding: 3px 0; }
+.nospend { display: flex; gap: 12px; align-items: center; }
+.nospend-badge { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); font-size: 1.4rem; flex: none; }
+.ns-cal { margin-top: 8px; }
+.ns-row, .ns-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.ns-head { font-size: 0.75rem; color: var(--muted); }
+.ns-head:first-child { color: var(--neg); }
+.ns-head:last-child { color: var(--pos); }
+.ns-day { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-radius: 8px; font-size: 0.8rem; line-height: 1.2; }
+.ns-saved { background: var(--accent-soft); color: var(--refund); font-weight: 700; }
+.ns-spent { color: var(--muted); }
+.ns-future { color: var(--line-strong); }
+.ns-num { font-size: 0.75rem; }
+.check-row { display: flex; gap: 10px; align-items: center; padding: 10px 14px; min-height: 52px; }
+.check-row input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); }
+.vs-up { color: var(--neg); font-weight: 700; }
+.vs-down { color: var(--refund); font-weight: 700; }

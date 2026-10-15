@@ -15,6 +15,8 @@ export interface TxInput {
   paymentMethodId: string;
   toPaymentMethodId?: string;
   memo?: string;
+  /** 고정지출 여부 (지출일 때만 저장) */
+  fixed?: boolean;
 }
 
 const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
@@ -50,6 +52,7 @@ function fieldsOf(i: TxInput) {
     paymentMethodId: i.paymentMethodId,
     toPaymentMethodId: i.type === 'transfer' ? i.toPaymentMethodId : undefined,
     memo: clean(i.memo),
+    fixed: i.type === 'expense' && i.fixed ? true : undefined,
   };
 }
 

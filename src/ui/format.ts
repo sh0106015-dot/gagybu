@@ -1,11 +1,14 @@
 import { formatWon } from '../core/money';
 import { toDateKey } from '../core/dates';
+import { periodKey } from '../core/period';
 import type { Transaction } from '../core/model';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const currentMonth = () => toDateKey(new Date()).slice(0, 7);
 export const today = () => toDateKey(new Date());
+/** 월 시작일을 반영한 현재 기간 키 */
+export const currentPeriod = (startDay: number) => periodKey(today(), startDay);
 
 export function monthLabel(month: string): string {
   const [y, m] = month.split('-').map(Number);

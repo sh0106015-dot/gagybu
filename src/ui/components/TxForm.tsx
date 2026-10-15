@@ -21,6 +21,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
   const [paymentMethodId, setPaymentMethodId] = useState(initial.paymentMethodId ?? '');
   const [toPaymentMethodId, setToPaymentMethodId] = useState(initial.toPaymentMethodId ?? '');
   const [memo, setMemo] = useState(initial.memo ?? '');
+  const [fixed, setFixed] = useState(initial.fixed ?? false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
@@ -43,6 +44,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
       type, amount: parseWon(amount) ?? 0, date, time: time || undefined, merchant,
       categoryId: type === 'transfer' ? '' : categoryId, paymentMethodId,
       toPaymentMethodId: type === 'transfer' ? toPaymentMethodId : undefined, memo,
+      fixed: type === 'expense' && fixed,
     };
     const err = validateTxInput(input);
     if (err) {
@@ -125,6 +127,14 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
                 <option value="">선택하세요 ›</option>
                 {methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
+            </label>
+          </li>
+        )}
+        {type === 'expense' && (
+          <li>
+            <label className="check-row">
+              <input type="checkbox" checked={fixed} onChange={(e) => setFixed(e.target.checked)} />
+              <span>고정지출 <span className="small muted">(월세·통신비·보험·구독처럼 매달 나가는 돈)</span></span>
             </label>
           </li>
         )}

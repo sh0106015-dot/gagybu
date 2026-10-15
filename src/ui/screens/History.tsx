@@ -3,36 +3,39 @@ import { Link } from 'react-router-dom';
 import { summarizeMonth } from '../../core/budget';
 import { formatWon } from '../../core/money';
 import { RECORD_METHOD_LABEL, TX_TYPE_LABEL } from '../../core/model';
-import { useLive, useLookups } from '../hooks';
-import { currentMonth, dayLabel, monthLabel, sortTxDesc } from '../format';
+import { periodLabel } from '../../core/period';
+import { useLive, useLookups, useStartDay } from '../hooks';
+import { currentPeriod, dayLabel, sortTxDesc } from '../format';
 import { EMPTY_FILTER, filterTransactions, type TxFilter } from '../filter';
 import { MonthNav } from '../components/MonthNav';
 import { PageHeader } from '../components/PageHeader';
 import { TxRow } from '../components/TxRow';
 
 export function History() {
-  const [month, setMonth] = useState(currentMonth());
+  const startDay = useStartDay();
+  const [picked, setMonth] = useState<string | null>(null);
   const [f, setF] = useState<TxFilter>(EMPTY_FILTER);
   const [showFilters, setShowFilters] = useState(false);
   const lookups = useLookups();
   const data = useLive(async (repo) => ({ txs: await repo.listTransactions(), refunds: await repo.listRefunds() }));
-  if (!data || !lookups) return <p className="loading">불러오는 중…</p>;
+  if (!data || !lookups || !startDay) return <p className="loading">불러오는 중…</p>;
+  const month = picked ?? currentPeriod(startDay);
 
-  const list = filterTransactions(data.txs, month, f).sort(sortTxDesc);
+  const list = filterTransactions(data.txs, month, f, startDay).sort(sortTxDesc);
   const refunded = new Map<string, number>();
   data.refunds.forEach((r) => refunded.set(r.originalTxId, (refunded.get(r.originalTxId) ?? 0) + r.amount));
   const groups = new Map<string, typeof list>();
   list.forEach((t) => groups.set(t.date, [...(groups.get(t.date) ?? []), t]));
   const set = <K extends keyof TxFilter>(k: K, v: TxFilter[K]) => setF({ ...f, [k]: v });
   const activeFilters = [f.type, f.categoryId, f.paymentMethodId, f.recordMethod].filter(Boolean).length;
-  const ms = summarizeMonth(month, data.txs, data.refunds);
+  const ms = summarizeMonth(month, data.txs, data.refunds, undefined, startDay);
 
   return (
     <div className="page">
       <PageHeader title="가계부 조회" right={<Link to="/tx/new" className="pill-btn">쓰기</Link>} />
-      <MonthNav month={month} onChange={setMonth} />
+      <MonthNav month={month} startDay={startDay} onChange={setMonth} />
 
-      <section className="card trio" aria-label={`${monthLabel(month)} 합계`}>
+      <section className="card trio" aria-label={`${periodLabel(month, startDay)} 합계`}>
         <div><span className="label">월간 수입</span><strong className="pos">{formatWon(ms.income)}</strong></div>
         <div><span className="label">월간 지출</span><strong className="neg">{formatWon(ms.expense)}</strong></div>
         <div><span className="label">환불</span><strong className="refund">{formatWon(ms.refund)}</strong></div>

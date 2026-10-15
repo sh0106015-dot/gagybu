@@ -1,28 +1,40 @@
 import { Link } from 'react-router-dom';
 import { summarizeDay, summarizeMonth } from '../../core/budget';
+import { shiftMonth } from '../../core/dates';
+import { noSpendDays } from '../../core/insights';
 import { formatWon } from '../../core/money';
-import { useLive, useLookups } from '../hooks';
-import { currentMonth, sortTxDesc, timeLabel, today } from '../format';
+import { daysIntoPeriod, periodLabel } from '../../core/period';
+import { useLive, useLookups, useStartDay } from '../hooks';
+import { currentPeriod, sortTxDesc, timeLabel, today } from '../format';
 import { BudgetBar } from '../components/BudgetBar';
 import { Icon, type IconName } from '../components/Icon';
 import { TxRow } from '../components/TxRow';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const RECAP_DAYS = 7;
 
 export function Home() {
-  const month = currentMonth();
+  const startDay = useStartDay();
   const date = today();
+  const month = startDay ? currentPeriod(startDay) : '';
+  const prevMonth = month ? shiftMonth(month, -1) : '';
   const lookups = useLookups();
   const data = useLive(async (repo) => {
-    const [txs, refunds, budget, candidates, auto] = await Promise.all([
-      repo.listTransactions(), repo.listRefunds(), repo.getBudget(month), repo.listCandidates(), repo.getAutoSettings(),
+    if (!month) return undefined;
+    const [txs, refunds, budget, prevBudget, candidates, auto] = await Promise.all([
+      repo.listTransactions(), repo.listRefunds(), repo.getBudget(month), repo.getBudget(prevMonth),
+      repo.listCandidates(), repo.getAutoSettings(),
     ]);
-    return { txs, refunds, budget, pending: candidates.filter((c) => c.status === 'pending').length, auto };
-  }, [month]);
-  if (!data || !lookups) return <p className="loading">불러오는 중…</p>;
+    return { txs, refunds, budget, prevBudget, pending: candidates.filter((c) => c.status === 'pending').length, auto };
+  }, [month, prevMonth]);
+  if (!data || !lookups || !startDay) return <p className="loading">불러오는 중…</p>;
 
-  const s = summarizeMonth(month, data.txs, data.refunds, data.budget);
+  const s = summarizeMonth(month, data.txs, data.refunds, data.budget, startDay);
   const d = summarizeDay(date, data.txs, data.refunds);
+  const ns = noSpendDays(month, data.txs, startDay, date);
+  const showRecap = daysIntoPeriod(date, startDay) <= RECAP_DAYS;
+  const prev = summarizeMonth(prevMonth, data.txs, data.refunds, data.prevBudget, startDay);
+  const prevTop = prev.byCategory.find((c) => c.amount > 0);
   const refunded = new Map<string, number>();
   data.refunds.forEach((r) => refunded.set(r.originalTxId, (refunded.get(r.originalTxId) ?? 0) + r.amount));
   const recent = [...data.txs].sort(sortTxDesc).slice(0, 5);
@@ -49,6 +61,27 @@ export function Home() {
     <div className="page">
       <header className="page-header"><h1>가계부</h1></header>
 
+      {showRecap && prev.expense + prev.income > 0 && (
+        <section className="card recap" aria-label="지난달 결산">
+          <p className="card-title">📋 지난달 결산 · {periodLabel(prevMonth, startDay)}</p>
+          <div className="budget-row"><span>순지출</span><strong className="neg">{formatWon(prev.netSpend)}</strong></div>
+          {prev.remaining !== undefined && (
+            <div className="budget-row">
+              <span>예산 대비</span>
+              <strong className={prev.remaining < 0 ? 'neg' : 'refund'}>
+                {prev.remaining < 0 ? `${formatWon(-prev.remaining)} 초과` : `${formatWon(prev.remaining)} 남김`}
+              </strong>
+            </div>
+          )}
+          {prevTop && (
+            <div className="budget-row"><span>가장 많이 쓴 곳</span><strong>{lookups.catName(prevTop.categoryId)} {formatWon(prevTop.amount)}</strong></div>
+          )}
+          <p className="small muted" style={{ margin: '6px 0 0' }}>
+            <Link to="/settings/budget">이번 달 예산 정하기</Link> · <Link to="/stats">자세히 보기</Link>
+          </p>
+        </section>
+      )}
+
       <section className="summary" aria-label="이번 달 요약">
         <ul className="summary-table">
           <li><span className="label">이번 달 순지출</span><strong className="neg">{formatWon(s.netSpend)}</strong></li>
@@ -65,6 +98,7 @@ export function Home() {
           <span className={`weekday ${now.getDay() === 0 ? 'sun' : now.getDay() === 6 ? 'sat' : ''}`}>({WEEKDAYS[now.getDay()]})</span>
         </div>
       </section>
+      {startDay !== 1 && <p className="small muted" style={{ margin: '6px 4px 0' }}>이번 달 기간: {periodLabel(month, startDay)}</p>}
 
       <section className="card duo-wrap" aria-label="오늘">
         <div className="duo">
@@ -72,6 +106,15 @@ export function Home() {
           <div><span className="label">오늘의 수입</span><strong className="pos">{formatWon(d.income)}</strong></div>
         </div>
       </section>
+
+      <Link to="/stats" className="card nospend">
+        <span className="nospend-badge" aria-hidden="true">🌱</span>
+        <span>
+          <strong>무지출 {ns.count}일</strong>
+          <span className="small muted"> / 지난 {ns.elapsed}일 중</span>
+          <span className="small muted" style={{ display: 'block' }}>고정지출은 빼고 세요. 달력은 통계에서 볼 수 있어요.</span>
+        </span>
+      </Link>
 
       <section className="card">
         <BudgetBar summary={s} />

@@ -1,42 +1,61 @@
 import { useState } from 'react';
 import { monthlyTrend, summarizeMonth } from '../../core/budget';
 import { shiftMonth } from '../../core/dates';
+import { categoryVsAverage, noSpendDays } from '../../core/insights';
 import { formatWon } from '../../core/money';
-import { useLive, useLookups } from '../hooks';
-import { currentMonth, monthLabel } from '../format';
+import { periodLabel } from '../../core/period';
+import { useLive, useLookups, useStartDay } from '../hooks';
+import { currentPeriod, today } from '../format';
 import { MonthNav } from '../components/MonthNav';
+import { NoSpendCalendar } from '../components/NoSpendCalendar';
 import { PageHeader } from '../components/PageHeader';
 
 export function Stats() {
-  const [month, setMonth] = useState(currentMonth());
+  const startDay = useStartDay();
+  const [picked, setMonth] = useState<string | null>(null);
+  const month = picked ?? (startDay ? currentPeriod(startDay) : '');
   const lookups = useLookups();
   const data = useLive(async (repo) => ({
     txs: await repo.listTransactions(),
     refunds: await repo.listRefunds(),
-    budget: await repo.getBudget(month),
+    budget: month ? await repo.getBudget(month) : undefined,
   }), [month]);
-  if (!data || !lookups) return <p className="loading">불러오는 중…</p>;
+  if (!data || !lookups || !startDay) return <p className="loading">불러오는 중…</p>;
 
-  const s = summarizeMonth(month, data.txs, data.refunds, data.budget);
-  const prev = summarizeMonth(shiftMonth(month, -1), data.txs, data.refunds);
+  const s = summarizeMonth(month, data.txs, data.refunds, data.budget, startDay);
+  const prev = summarizeMonth(shiftMonth(month, -1), data.txs, data.refunds, undefined, startDay);
   const diff = s.netSpend - prev.netSpend;
-  const trend = monthlyTrend(month, 6, data.txs, data.refunds);
+  const trend = monthlyTrend(month, 6, data.txs, data.refunds, startDay);
   const maxTrend = Math.max(1, ...trend.map((t) => t.netSpend));
   const positives = s.byCategory.filter((c) => c.amount > 0);
+  const vsAvg = categoryVsAverage(month, data.txs, data.refunds, startDay);
+  const ns = noSpendDays(month, data.txs, startDay, today());
+  const short = (m: string) => (startDay === 1 ? `${Number(m.slice(5))}월` : `${Number(m.slice(5))}/${startDay}~`);
 
   return (
     <div className="page">
       <PageHeader title="통계" />
-      <MonthNav month={month} onChange={setMonth} />
+      <MonthNav month={month} startDay={startDay} onChange={setMonth} />
 
       <section className="card">
         <div className="budget-row"><span>지출</span><strong className="neg">{formatWon(s.expense)}</strong></div>
+        <div className="budget-row small muted"><span>　ㄴ 고정지출</span><span>{formatWon(s.fixedExpense)}</span></div>
+        <div className="budget-row small muted"><span>　ㄴ 변동지출</span><span>{formatWon(s.variableExpense)}</span></div>
         <div className="budget-row"><span>환불</span><strong className="refund">-{formatWon(s.refund)}</strong></div>
         <div className="budget-row"><span>순지출</span><strong>{formatWon(s.netSpend)}</strong></div>
         <div className="budget-row"><span>수입</span><strong className="pos">{formatWon(s.income)}</strong></div>
         <p className="small muted">
           전월 대비 {diff === 0 ? '변동 없음' : `${diff > 0 ? '▲ 증가' : '▼ 감소'} ${formatWon(Math.abs(diff))}`}
         </p>
+      </section>
+
+      <section className="card">
+        <h2>무지출 챌린지</h2>
+        <p className="small" style={{ margin: '4px 0' }}>
+          <strong className="refund">○ 무지출 {ns.count}일</strong>
+          <span className="muted"> / 지난 {ns.elapsed}일 · ● 지출한 날 · 고정지출은 세지 않아요</span>
+        </p>
+        <NoSpendCalendar days={ns.days} />
       </section>
 
       <section className="card">
@@ -63,6 +82,32 @@ export function Stats() {
       </section>
 
       <section className="card">
+        <h2>최근 3개월 평균과 비교</h2>
+        {vsAvg.length === 0 ? (
+          <p className="muted small">이 달의 지출이 없어요.</p>
+        ) : (
+          <ul className="list small" style={{ marginTop: 8 }}>
+            {vsAvg.map((c) => (
+              <li key={c.categoryId} className="budget-row">
+                <span>{lookups.catName(c.categoryId)}</span>
+                <span>
+                  {formatWon(c.amount)}{' '}
+                  {c.diffRate === undefined ? (
+                    <span className="muted">(이전 기록 없음)</span>
+                  ) : (
+                    <span className={c.diffRate > 0 ? 'vs-up' : 'vs-down'}>
+                      {c.diffRate > 0 ? '▲' : '▼'} {Math.abs(Math.round(c.diffRate * 100))}%
+                    </span>
+                  )}
+                  <span className="muted"> · 평균 {formatWon(c.average)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card">
         <h2>최근 6개월 순지출</h2>
         <svg viewBox="0 0 300 140" width="100%" role="img" aria-label="최근 6개월 순지출 막대 그래프">
           {trend.map((t, i) => {
@@ -70,15 +115,15 @@ export function Stats() {
             const x = 10 + i * 48;
             return (
               <g key={t.month}>
-                <rect x={x} y={110 - h} width="32" height={h} rx="4" fill={t.month === month ? 'var(--accent)' : 'var(--line)'} />
-                <text x={x + 16} y="128" textAnchor="middle" fontSize="11" fill="var(--muted)">{Number(t.month.slice(5))}월</text>
+                <rect x={x} y={110 - h} width="32" height={h} rx="4" fill={t.month === month ? 'var(--accent)' : 'var(--line-strong)'} />
+                <text x={x + 16} y="128" textAnchor="middle" fontSize="11" fill="var(--muted)">{short(t.month)}</text>
               </g>
             );
           })}
         </svg>
         <ul className="list small">
           {trend.map((t) => (
-            <li key={t.month} className="budget-row"><span>{monthLabel(t.month)}</span><span>{formatWon(t.netSpend)}</span></li>
+            <li key={t.month} className="budget-row"><span>{periodLabel(t.month, startDay)}</span><span>{formatWon(t.netSpend)}</span></li>
           ))}
         </ul>
       </section>

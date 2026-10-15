@@ -1,10 +1,13 @@
-import { monthKey, shiftMonth } from './dates';
+import { shiftMonth } from './dates';
+import { periodKey } from './period';
 import type { Budget, Refund, Transaction } from './model';
 
 export interface MonthSummary {
   month: string;
   income: number;
   expense: number;
+  fixedExpense: number;
+  variableExpense: number;
   refund: number;
   netSpend: number;
   budget?: number;
@@ -13,24 +16,29 @@ export interface MonthSummary {
   byCategory: { categoryId: string; amount: number }[];
 }
 
-export function summarizeMonth(month: string, txs: Transaction[], refunds: Refund[], budget?: Budget): MonthSummary {
+/** month는 기간 키다. startDay가 1이 아니면 월 시작일 기준 기간(periodKey)으로 묶는다. */
+export function summarizeMonth(
+  month: string, txs: Transaction[], refunds: Refund[], budget?: Budget, startDay = 1,
+): MonthSummary {
   let income = 0;
   let expense = 0;
+  let fixedExpense = 0;
   let refund = 0;
   const byCat = new Map<string, number>();
   const add = (id: string, v: number) => byCat.set(id, (byCat.get(id) ?? 0) + v);
   const txById = new Map(txs.map((t) => [t.id, t]));
 
   for (const t of txs) {
-    if (monthKey(t.date) !== month) continue;
+    if (periodKey(t.date, startDay) !== month) continue;
     if (t.type === 'income') income += t.amount;
     if (t.type === 'expense') {
       expense += t.amount;
+      if (t.fixed) fixedExpense += t.amount;
       add(t.categoryId, t.amount);
     }
   }
   for (const r of refunds) {
-    if (monthKey(r.date) !== month) continue;
+    if (periodKey(r.date, startDay) !== month) continue;
     const orig = txById.get(r.originalTxId);
     if (!orig) continue;
     refund += r.amount;
@@ -43,6 +51,8 @@ export function summarizeMonth(month: string, txs: Transaction[], refunds: Refun
     month,
     income,
     expense,
+    fixedExpense,
+    variableExpense: expense - fixedExpense,
     refund,
     netSpend,
     budget: total,
@@ -67,9 +77,9 @@ export function summarizeDay(date: string, txs: Transaction[], refunds: Refund[]
   return { income, expense, refund, netSpend: expense - refund };
 }
 
-export function monthlyTrend(endMonth: string, count: number, txs: Transaction[], refunds: Refund[]) {
+export function monthlyTrend(endMonth: string, count: number, txs: Transaction[], refunds: Refund[], startDay = 1) {
   return Array.from({ length: count }, (_, i) => {
-    const s = summarizeMonth(shiftMonth(endMonth, i - count + 1), txs, refunds);
+    const s = summarizeMonth(shiftMonth(endMonth, i - count + 1), txs, refunds, undefined, startDay);
     return { month: s.month, netSpend: s.netSpend, income: s.income };
   });
 }

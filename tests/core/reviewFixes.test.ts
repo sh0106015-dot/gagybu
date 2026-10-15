@@ -67,3 +67,15 @@ describe('review fixes', () => {
     expect(row).toContain(`'+1`);
   });
 });
+
+describe('fixed expense flag', () => {
+  it('is stored for expenses and dropped for other types', async () => {
+    const { deps } = await setup();
+    const base: TxInput = { type: 'expense', amount: 550000, date: '2026-10-25', categoryId: 'cat-food', paymentMethodId: 'pm-cash', fixed: true };
+    expect((await saveManualTransaction(base, deps)).fixed).toBe(true);
+    const income = await saveManualTransaction({ ...base, type: 'income' }, deps);
+    expect(income.fixed).toBeUndefined();
+    const t = await saveManualTransaction({ ...base, fixed: false }, deps);
+    expect((await updateTransaction(t.id, { ...base, fixed: true }, deps)).fixed).toBe(true);
+  });
+});

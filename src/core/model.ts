@@ -44,6 +44,8 @@ export interface Transaction {
   dateFromReceipt: boolean;
   userEdited: boolean;
   approvalNo?: string;
+  /** 월세·통신비·구독처럼 매달 고정으로 나가는 지출 */
+  fixed?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -163,6 +165,8 @@ export interface AppSettings {
   lockEnabled: boolean;
   pinHash?: string;
   pinSalt?: string;
+  /** 가계부 한 달의 시작일 (1~28). 없으면 1일. */
+  monthStartDay?: number;
 }
 
 export interface NotificationInput {

@@ -7,6 +7,12 @@ export function useLive<T>(fn: (repo: Repo) => Promise<T>, deps: unknown[] = [])
   return useLiveQuery(() => fn(repo), deps);
 }
 
+/** 설정된 월 시작일 (기본 1일). 불러오는 중이면 undefined. */
+export function useStartDay(): number | undefined {
+  const app = useLive((repo) => repo.getAppSettings());
+  return app ? app.monthStartDay ?? 1 : undefined;
+}
+
 export function useLookups() {
   return useLive(async (repo) => {
     const [categories, methods] = await Promise.all([repo.listCategories(), repo.listPaymentMethods()]);

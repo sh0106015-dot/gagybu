@@ -29,3 +29,10 @@ describe('filterTransactions', () => {
     expect(ids(filterTransactions(txs, '2026-10', { ...EMPTY_FILTER, recordMethod: 'auto' }))).toEqual(['b']);
   });
 });
+
+describe('filterTransactions with month start day', () => {
+  it('uses the pay-day period', () => {
+    const list = [tx({ id: 'p', date: '2026-10-24' }), tx({ id: 'q', date: '2026-10-25' }), tx({ id: 'r', date: '2026-11-24' })];
+    expect(filterTransactions(list, '2026-10', EMPTY_FILTER, 25).map((t) => t.id)).toEqual(['q', 'r']);
+  });
+});

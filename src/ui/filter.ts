@@ -1,4 +1,4 @@
-import { monthKey } from '../core/dates';
+import { periodKey } from '../core/period';
 import type { RecordMethod, Transaction, TxType } from '../core/model';
 
 export interface TxFilter {
@@ -13,11 +13,11 @@ export const EMPTY_FILTER: TxFilter = { query: '', type: '', categoryId: '', pay
 
 const squash = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
-export function filterTransactions(txs: Transaction[], month: string, f: TxFilter): Transaction[] {
+export function filterTransactions(txs: Transaction[], month: string, f: TxFilter, startDay = 1): Transaction[] {
   const q = squash(f.query);
   return txs.filter(
     (t) =>
-      monthKey(t.date) === month &&
+      periodKey(t.date, startDay) === month &&
       (!q || squash(`${t.merchant ?? ''} ${t.memo ?? ''}`).includes(q)) &&
       (!f.type || t.type === f.type) &&
       (!f.categoryId || t.categoryId === f.categoryId) &&

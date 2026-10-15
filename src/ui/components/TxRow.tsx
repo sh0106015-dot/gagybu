@@ -17,6 +17,7 @@ export function TxRow({ tx, refunded, catName, pmName }: {
           <span className="tx-title">{title}</span>
           <span className="tx-sub">
             {tx.time ? `${tx.time} · ` : ''}{sub}
+            {tx.fixed && <span className="badge">고정</span>}
             {tx.recordMethod !== 'manual' && <span className="badge">자동</span>}
           </span>
         </div>
