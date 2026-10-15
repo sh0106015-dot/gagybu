@@ -104,6 +104,13 @@ export function History() {
         )}
       </div>
 
+      {view === 'list' && list.length > 0 && (
+        <div className="section-head">
+          <h2>최근 거래</h2>
+          <span className="small muted">최신순 · {list.length}건</span>
+        </div>
+      )}
+
       {list.length === 0 ? (
         <EmptyArt pose={view === 'calendar' && !day ? 'write' : 'sleep'}>
           {view === 'calendar' ? (day ? '이 날은 거래가 없어요.' : '날짜를 누르면 그날 거래가 보여요.') : '이 달에 해당하는 거래가 없어요.'}

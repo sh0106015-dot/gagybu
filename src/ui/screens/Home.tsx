@@ -5,12 +5,11 @@ import { categoryBudgetStatus, noSpendDays } from '../../core/insights';
 import { formatWon } from '../../core/money';
 import { daysIntoPeriod, periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
-import { currentPeriod, sortTxDesc, timeLabel, today } from '../format';
+import { currentPeriod, timeLabel, today } from '../format';
 import { BudgetBar } from '../components/BudgetBar';
 import { Sticker, type BunnyPose } from '../art/Bunny';
 import { MenuArt, type MenuArtName } from '../art/MenuArt';
-import { EmptyArt, Hero } from '../art/Scenes';
-import { TxRow } from '../components/TxRow';
+import { Hero } from '../art/Scenes';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const RECAP_DAYS = 7;
@@ -38,9 +37,6 @@ export function Home() {
   const showRecap = daysIntoPeriod(date, startDay) <= RECAP_DAYS;
   const prev = summarizeMonth(prevMonth, data.txs, data.refunds, data.prevBudget, startDay);
   const prevTop = prev.byCategory.find((c) => c.amount > 0);
-  const refunded = new Map<string, number>();
-  data.refunds.forEach((r) => refunded.set(r.originalTxId, (refunded.get(r.originalTxId) ?? 0) + r.amount));
-  const recent = [...data.txs].sort(sortTxDesc).slice(0, 5);
   const now = new Date();
 
   const a = data.auto;
@@ -161,21 +157,6 @@ export function Home() {
         <span>{autoText}</span>
       </Link>
 
-      <section>
-        <div className="section-head">
-          <h2>최근 거래</h2>
-          <Link to="/history">전체 보기</Link>
-        </div>
-        {recent.length === 0 ? (
-          <EmptyArt>아직 거래가 없어요. ‘쓰기’로 첫 거래를 기록해 보세요.</EmptyArt>
-        ) : (
-          <ul className="tx-list">
-            {recent.map((t) => (
-              <TxRow key={t.id} tx={t} refunded={refunded.get(t.id)} catName={lookups.catName} pmName={lookups.pmName} />
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }
