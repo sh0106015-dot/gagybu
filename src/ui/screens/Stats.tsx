@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { monthlyTrend, summarizeMonth } from '../../core/budget';
 import { shiftMonth } from '../../core/dates';
-import { categoryVsAverage, noSpendDays } from '../../core/insights';
+import { categoryVsAverage, noSpendDays, spendByPaymentKind } from '../../core/insights';
+import { PAYMENT_KIND_LABEL } from '../../core/model';
 import { formatWon } from '../../core/money';
 import { periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
@@ -30,6 +31,8 @@ export function Stats() {
   const positives = s.byCategory.filter((c) => c.amount > 0);
   const vsAvg = categoryVsAverage(month, data.txs, data.refunds, startDay);
   const ns = noSpendDays(month, data.txs, startDay, today());
+  const byKind = spendByPaymentKind(month, data.txs, data.refunds, lookups.methods, startDay);
+  const kindTotal = byKind.reduce((s2, k) => s2 + Math.max(0, k.amount), 0);
   const short = (m: string) => (startDay === 1 ? `${Number(m.slice(5))}월` : `${Number(m.slice(5))}/${startDay}~`);
 
   return (
@@ -79,6 +82,25 @@ export function Stats() {
             );
           })
         )}
+      </section>
+
+      <section className="card">
+        <h2>결제수단별 지출</h2>
+        {byKind.length === 0 ? (
+          <p className="muted small">이 달의 지출이 없어요.</p>
+        ) : (
+          byKind.map((k) => {
+            const pct = kindTotal > 0 ? Math.round((Math.max(0, k.amount) / kindTotal) * 100) : 0;
+            return (
+              <div key={k.kind} className="hbar">
+                <span>{PAYMENT_KIND_LABEL[k.kind]}</span>
+                <div className="bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
+                <span className="small">{formatWon(k.amount)} · {pct}% · {k.count}건</span>
+              </div>
+            );
+          })
+        )}
+        <p className="small muted" style={{ margin: '6px 0 0' }}>환불은 원래 결제한 수단에서 빼고 계산해요. 이체는 포함하지 않아요.</p>
       </section>
 
       <section className="card">

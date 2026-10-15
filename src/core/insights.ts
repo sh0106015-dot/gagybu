@@ -1,7 +1,8 @@
 import { summarizeMonth } from './budget';
 import { shiftMonth } from './dates';
-import type { Refund, Transaction } from './model';
-import { periodDates } from './period';
+import type { PaymentKind, PaymentMethod, Refund, Transaction } from './model';
+import { PAYMENT_KIND_LABEL } from './model';
+import { periodDates, periodKey } from './period';
 
 export interface NoSpendDay {
   date: string;
@@ -44,4 +45,32 @@ export function categoryVsAverage(month: string, txs: Transaction[], refunds: Re
 export function suggestBudget(i: { income: number; saving: number; fixed: number }) {
   const budget = Math.max(0, i.income - i.saving);
   return { budget, living: Math.max(0, budget - i.fixed) };
+}
+
+/**
+ * 결제수단 종류(신용카드·체크카드·현금 등)별 순지출. 환불은 원거래의 수단에서 뺀다.
+ * 지출이 없는 종류는 빼고, PAYMENT_KIND_LABEL 순서로 돌려준다.
+ */
+export function spendByPaymentKind(
+  month: string, txs: Transaction[], refunds: Refund[], methods: PaymentMethod[], startDay: number,
+) {
+  const kindOf = new Map(methods.map((m) => [m.id, m.kind]));
+  const txById = new Map(txs.map((t) => [t.id, t]));
+  const sums = new Map<PaymentKind, { amount: number; count: number }>();
+  const add = (kind: PaymentKind, amount: number, count: number) => {
+    const cur = sums.get(kind) ?? { amount: 0, count: 0 };
+    sums.set(kind, { amount: cur.amount + amount, count: cur.count + count });
+  };
+  for (const t of txs) {
+    if (t.type !== 'expense' || periodKey(t.date, startDay) !== month) continue;
+    add(kindOf.get(t.paymentMethodId) ?? 'card', t.amount, 1);
+  }
+  for (const r of refunds) {
+    const orig = txById.get(r.originalTxId);
+    if (!orig || periodKey(r.date, startDay) !== month) continue;
+    add(kindOf.get(orig.paymentMethodId) ?? 'card', -r.amount, 0);
+  }
+  return (Object.keys(PAYMENT_KIND_LABEL) as PaymentKind[])
+    .filter((k) => sums.has(k))
+    .map((kind) => ({ kind, ...sums.get(kind)! }));
 }

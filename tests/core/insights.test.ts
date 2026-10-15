@@ -86,3 +86,28 @@ describe('suggestBudget (save first)', () => {
     expect(suggestBudget({ income: 1000000, saving: 1200000, fixed: 300000 })).toEqual({ budget: 0, living: 0 });
   });
 });
+
+describe('spendByPaymentKind', () => {
+  it('sums net expense per payment kind, refunds subtract from the original method, transfers ignored', async () => {
+    const { spendByPaymentKind } = await import('../../src/core/insights');
+    const methods = [
+      { id: 'c1', name: '신용', kind: 'credit' as const, matchKeys: [], sortOrder: 0, archived: false },
+      { id: 'c2', name: '삼성', kind: 'credit' as const, matchKeys: [], sortOrder: 1, archived: false },
+      { id: 'd1', name: '체크', kind: 'debit' as const, matchKeys: [], sortOrder: 2, archived: false },
+      { id: 'h', name: '현금', kind: 'cash' as const, matchKeys: [], sortOrder: 3, archived: false },
+    ];
+    const txs = [
+      tx({ id: 'a', amount: 30000, paymentMethodId: 'c1', date: '2026-10-03' }),
+      tx({ id: 'b', amount: 20000, paymentMethodId: 'c2', date: '2026-10-04' }),
+      tx({ id: 'c', amount: 8000, paymentMethodId: 'd1', date: '2026-10-05' }),
+      tx({ id: 'd', amount: 5000, paymentMethodId: 'h', date: '2026-09-30' }),
+      tx({ id: 'e', type: 'transfer', amount: 99000, paymentMethodId: 'd1', toPaymentMethodId: 'h', categoryId: '', date: '2026-10-05' }),
+      tx({ id: 'f', type: 'income', amount: 1000, paymentMethodId: 'h', date: '2026-10-05' }),
+    ];
+    const refunds: Refund[] = [{ id: 'r', originalTxId: 'a', amount: 10000, date: '2026-10-09', createdAt: 1 }];
+    expect(spendByPaymentKind('2026-10', txs, refunds, methods, 1)).toEqual([
+      { kind: 'credit', amount: 40000, count: 2 },
+      { kind: 'debit', amount: 8000, count: 1 },
+    ]);
+  });
+});
