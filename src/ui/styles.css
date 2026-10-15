@@ -413,3 +413,17 @@ body {
 .memo-actions { display: flex; gap: 6px; flex: none; }
 .btn-sm { min-height: 34px; padding: 4px 10px; font-size: 0.85rem; border-radius: 9px; }
 .memo-editing { background: var(--accent-soft); }
+
+/* 아래에서 올라오는 작성 창 */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgb(30 20 45 / 0.45); display: flex; align-items: flex-end; justify-content: center; animation: fade-in 0.15s ease-out; }
+.sheet {
+  width: 100%; max-width: 560px; background: var(--surface); border-radius: 20px 20px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.18); animation: sheet-up 0.2s ease-out;
+}
+.sheet-grip { display: block; width: 44px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto 6px; }
+.sheet h2 { font-size: 1.05rem; }
+.sheet textarea { resize: vertical; min-height: 130px; }
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet-backdrop { animation: none; } }
+button.fab { border: 0; cursor: pointer; font: inherit; font-size: 2rem; }

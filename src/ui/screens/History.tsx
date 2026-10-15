@@ -43,6 +43,7 @@ export function History() {
   const [f, setF] = useState<TxFilter>(EMPTY_FILTER);
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [memoOpen, setMemoOpen] = useState(false);
   const lookups = useLookups();
   const data = useLive(async (repo) => ({ txs: await repo.listTransactions(), refunds: await repo.listRefunds() }));
   if (!data || !lookups || !startDay) return <p className="loading">불러오는 중…</p>;
@@ -258,10 +259,22 @@ export function History() {
       {tab === 'settle' && <Settlement month={month} startDay={startDay} txs={data.txs} refunds={data.refunds} lookups={lookups} />}
 
       {tab === 'memo' && (
-        <MemoTab month={month} startDay={startDay} txs={filtered} query={f.query} catName={lookups.catName} />
+        <MemoTab
+          month={month}
+          startDay={startDay}
+          txs={filtered}
+          query={f.query}
+          catName={lookups.catName}
+          composeOpen={memoOpen}
+          onCloseCompose={() => setMemoOpen(false)}
+        />
       )}
 
-      <Link to="/tx/new" className="fab" aria-label="거래 추가">+</Link>
+      {tab === 'memo' ? (
+        <button type="button" className="fab" aria-label="메모 쓰기" aria-haspopup="dialog" onClick={() => setMemoOpen(true)}>+</button>
+      ) : (
+        <Link to="/tx/new" className="fab" aria-label="거래 추가">+</Link>
+      )}
     </div>
   );
 }
