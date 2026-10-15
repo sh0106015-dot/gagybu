@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { hashPin, verifyPin } from '../../data/crypto';
+import { hashPin } from '../../data/crypto';
+import { tryPin } from '../../data/pinGuard';
+import { waitLabel } from './LockScreen';
 import { useServices } from '../AppContext';
 import { useLive } from '../hooks';
 import { PageHeader } from '../components/PageHeader';
@@ -20,12 +22,18 @@ export function LockSettings() {
     if (!PIN_RE.test(pin)) return setError('숫자 4~6자리로 입력하세요');
     if (pin !== pin2) return setError('두 PIN이 달라요');
     const { hash, salt } = await hashPin(pin);
-    await repo.commit({ appSettings: { ...app, lockEnabled: true, pinHash: hash, pinSalt: salt } });
+    await repo.commit({ appSettings: { ...app, lockEnabled: true, pinHash: hash, pinSalt: salt, failedPinAttempts: 0, pinLockedUntil: undefined } });
     navigate(-1);
   };
   const disable = async () => {
-    if (!app.pinHash || !app.pinSalt || !(await verifyPin(pin, app.pinHash, app.pinSalt))) return setError('PIN이 맞지 않아요');
-    await repo.commit({ appSettings: { ...app, lockEnabled: false, pinHash: undefined, pinSalt: undefined } });
+    // 잠금 끄기도 잠금 화면과 같은 틀림 횟수 제한을 따른다.
+    const r = await tryPin(repo, pin);
+    if (!r.ok) {
+      setPin('');
+      return setError(r.waitMs > 0 ? `PIN을 여러 번 틀렸어요. ${waitLabel(r.waitMs)} 뒤에 다시 시도하세요.` : `PIN이 맞지 않아요. ${r.attemptsLeft}번 더 틀리면 잠시 기다려야 해요.`);
+    }
+    const fresh = await repo.getAppSettings();
+    await repo.commit({ appSettings: { ...fresh, lockEnabled: false, pinHash: undefined, pinSalt: undefined, failedPinAttempts: 0, pinLockedUntil: undefined } });
     navigate(-1);
   };
   const pinInput = (label: string, v: string, set: (s: string) => void) => (

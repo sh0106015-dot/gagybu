@@ -2,12 +2,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { CSP } from './csp';
 
 export default defineConfig({
   // GitHub Pages(https://아이디.github.io/저장소/)에서는 배포 작업이 BASE_PATH=/저장소/ 를 넘겨준다.
   base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
+    {
+      // 배포본에만 외부 전송 차단 규칙(CSP)을 넣는다.
+      name: 'inject-csp',
+      apply: 'build',
+      transformIndexHtml: (html: string) =>
+        html.replace(
+          '<meta charset="UTF-8" />',
+          `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`,
+        ),
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon-64.png'],

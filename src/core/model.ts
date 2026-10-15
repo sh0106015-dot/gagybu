@@ -218,6 +218,10 @@ export interface AppSettings {
   monthStartDay?: number;
   /** 화면 테마. 없거나 'auto'면 휴대폰 설정을 따른다. */
   theme?: 'auto' | 'light' | 'dark';
+  /** 연속으로 PIN을 틀린 횟수 (맞히면 0) */
+  failedPinAttempts?: number;
+  /** 이 시각(ms)까지 PIN 입력을 막는다 */
+  pinLockedUntil?: number;
 }
 
 export interface NotificationInput {
