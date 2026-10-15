@@ -427,3 +427,4 @@ body {
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet-backdrop { animation: none; } }
 button.fab { border: 0; cursor: pointer; font: inherit; font-size: 2rem; }
+.memo-foot { display: flex; justify-content: center; padding: 18px 0 4px; opacity: 0.9; }

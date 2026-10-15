@@ -7,6 +7,7 @@ import { periodKey, periodRange } from '../../core/period';
 import { useServices } from '../AppContext';
 import { useLive } from '../hooks';
 import { dayLabel, today } from '../format';
+import { Bunny } from '../art/Bunny';
 import { EmptyArt } from '../art/Scenes';
 import { useUndo } from './Undo';
 
@@ -88,6 +89,11 @@ export function MemoTab({ month, startDay, txs, query, catName, composeOpen, onC
             ),
           )}
         </ul>
+      )}
+      {items.length > 0 && (
+        <div className="memo-foot" aria-hidden="true">
+          <Bunny pose="write" size={84} />
+        </div>
       )}
 
       {(composeOpen || editing) && (
