@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  candidateToInput, confirmCandidate, ignoreCandidate, linkCandidateRefund, mergeCandidate,
+  candidateToInput, confirmCandidate, findCandidateDuplicate, ignoreCandidate, linkCandidateRefund, mergeCandidate,
 } from '../../core/actions';
 import { txAt } from '../../core/dates';
 import { formatWon, parseWon } from '../../core/money';
@@ -22,11 +22,15 @@ export function CandidateDetail() {
   const lookups = useLookups();
   const [excerpt, setExcerpt] = useState<string | null>(null);
   const [mode, setMode] = useState<'choose' | 'form'>('choose');
-  const data = useLive(async (repo) => ({
-    c: await repo.getCandidate(id),
-    txs: await repo.listTransactions(),
-    refunds: await repo.listRefunds(),
-  }), [id]);
+  const data = useLive(async (repo) => {
+    const c = await repo.getCandidate(id);
+    return {
+      c,
+      txs: await repo.listTransactions(),
+      refunds: await repo.listRefunds(),
+      dupId: c ? await findCandidateDuplicate(c, { repo }) : undefined,
+    };
+  }, [id]);
 
   if (!data || !lookups) return <p className="loading">불러오는 중…</p>;
   const { c } = data;
@@ -47,7 +51,7 @@ export function CandidateDetail() {
       setExcerpt('내용을 열 수 없어요.');
     }
   };
-  const dup = c.duplicateOfTxId ? data.txs.find((t) => t.id === c.duplicateOfTxId) : undefined;
+  const dup = data.dupId ? data.txs.find((t) => t.id === data.dupId) : undefined;
 
   return (
     <div className="page">

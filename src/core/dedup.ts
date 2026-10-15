@@ -1,6 +1,6 @@
 import { txAt } from './dates';
 import { normalizeMerchant } from './merchant';
-import type { NotificationRecord, Refund, SourceApp, Transaction } from './model';
+import type { Candidate, NotificationRecord, Refund, SourceApp, Transaction } from './model';
 import { DUP_WINDOW_MS } from './model';
 
 export interface DupProbe {
@@ -45,6 +45,24 @@ export function findDuplicateTx(probe: DupProbe, txs: Transaction[], records: No
     suspect ??= t.id;
   }
   return suspect ? { kind: 'suspect', id: suspect } : { kind: 'none' };
+}
+
+/** 다른 앱에서 먼저 들어와 아직 확인함에 있는 같은 거래 후보의 id. */
+export function findDuplicateCandidate(
+  probe: DupProbe, kind: 'approval' | 'cancel', candidates: Candidate[],
+): string | undefined {
+  if (probe.amount === undefined) return undefined;
+  return candidates.find((c) => {
+    const f = c.fields;
+    return (
+      c.status === 'pending' &&
+      c.sourceApp !== probe.sourceApp &&
+      f.kind === kind &&
+      f.amount === probe.amount &&
+      !(probe.approvalNo && f.approvalNo && probe.approvalNo !== f.approvalNo) &&
+      Math.abs(txAt(f.date, f.time) - probe.at) <= DUP_WINDOW_MS
+    );
+  })?.id;
 }
 
 export function findDuplicateRefund(

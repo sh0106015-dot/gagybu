@@ -1,5 +1,5 @@
 import type { Deps } from '../deps';
-import { findDuplicateRefund, findDuplicateTx } from '../dedup';
+import { findDuplicateCandidate, findDuplicateRefund, findDuplicateTx } from '../dedup';
 import { guessCategory } from '../merchant';
 import type {
   AllowedSource, Candidate, CandidateFields, CandidateReason, NotificationInput,
@@ -65,8 +65,9 @@ export async function ingestNotification(
   }
 
   const p = parsed.tx;
-  const [methods, categories, txs, refunds, records] = await Promise.all([
+  const [methods, categories, txs, refunds, records, candidates] = await Promise.all([
     repo.listPaymentMethods(), repo.listCategories(), repo.listTransactions(), repo.listRefunds(), repo.listRecords(),
+    repo.listCandidates(),
   ]);
   const pm = mapPaymentMethod(methods, p.cardName, p.cardLast4);
   const dt = resolveTxDateTime(p, input.receivedAt);
@@ -99,15 +100,19 @@ export async function ingestNotification(
   let duplicateOfTxId: string | undefined;
   let refundCandidateTxIds: string[] | undefined;
 
+  // 확인함에 아직 남아 있는 다른 앱의 같은 결제도 중복 후보로 표시한다.
+  if (findDuplicateCandidate(probe, p.kind, candidates)) reasons.add('duplicate_suspect');
+
   if (p.kind === 'approval') {
     const dup = findDuplicateTx(probe, txs, records);
-    if (dup.kind === 'certain') {
+    // 붙여넣기는 항상 확인함으로 보내므로 확실한 중복도 자동으로 합치지 않는다.
+    if (dup.kind === 'certain' && !paste) {
       record.outcome = 'merged';
       record.linkedTxId = dup.id;
       await repo.commit({ records: [record], autoSettings: touchedSettings });
       return { outcome: 'merged', recordId: record.id, txId: dup.id };
     }
-    if (dup.kind === 'suspect') {
+    if (dup.kind !== 'none') {
       reasons.add('duplicate_suspect');
       duplicateOfTxId = dup.id;
     }
@@ -126,7 +131,8 @@ export async function ingestNotification(
   } else if (pm && p.amount !== undefined) {
     const amount = p.amount;
     const dupRefundId = findDuplicateRefund(probe, refunds, txs, records);
-    if (dupRefundId) {
+    if (dupRefundId && paste) reasons.add('duplicate_suspect');
+    if (dupRefundId && !paste) {
       record.outcome = 'merged';
       record.linkedRefundId = dupRefundId;
       await repo.commit({ records: [record], autoSettings: touchedSettings });
@@ -176,26 +182,39 @@ export async function ingestSafely(
   deps: Deps,
   opts: { paste?: boolean } = {},
 ): Promise<IngestResult | { outcome: 'queued' }> {
-  try {
-    return await ingestNotification(input, deps, opts);
-  } catch (e) {
-    // 금융 정보 없이 오류 종류만 남긴다.
-    console.warn('ingest_failed', e instanceof Error ? e.name : 'unknown');
-    await deps.repo.enqueuePending({ id: deps.newId(), input, paste: opts.paste === true, createdAt: deps.now() });
-    return { outcome: 'queued' };
-  }
+  return serial(async () => {
+    try {
+      return await ingestNotification(input, deps, opts);
+    } catch (e) {
+      // 금융 정보 없이 오류 종류만 남긴다.
+      console.warn('ingest_failed', e instanceof Error ? e.name : 'unknown');
+      await deps.repo.enqueuePending({ id: deps.newId(), input, paste: opts.paste === true, createdAt: deps.now() });
+      return { outcome: 'queued' as const };
+    }
+  });
 }
 
 export async function drainPending(deps: Deps): Promise<number> {
-  let done = 0;
-  for (const item of await deps.repo.listPending()) {
-    try {
-      await ingestNotification(item.input, deps, { paste: item.paste });
-      await deps.repo.removePending(item.id);
-      done++;
-    } catch (e) {
-      console.warn('drain_failed', e instanceof Error ? e.name : 'unknown');
+  return serial(async () => {
+    let done = 0;
+    for (const item of await deps.repo.listPending()) {
+      try {
+        await ingestNotification(item.input, deps, { paste: item.paste });
+        await deps.repo.removePending(item.id);
+        done++;
+      } catch (e) {
+        console.warn('drain_failed', e instanceof Error ? e.name : 'unknown');
+      }
     }
-  }
-  return done;
+    return done;
+  });
+}
+
+// 알림 처리는 "읽고 판단한 뒤 쓰기"라서 동시에 실행되면 중복 저장이 생길 수 있다. 한 번에 하나씩 처리한다.
+let queue: Promise<unknown> = Promise.resolve();
+
+function serial<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => undefined);
+  return run;
 }

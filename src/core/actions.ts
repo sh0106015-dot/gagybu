@@ -1,3 +1,5 @@
+import { txAt } from './dates';
+import { findDuplicateTx } from './dedup';
 import type { Deps } from './deps';
 import type { Candidate, NotificationRecord, PaymentMethod, Refund, Transaction, TxType } from './model';
 import { refundableAmount } from './refund';
@@ -66,6 +68,12 @@ export async function updateTransaction(id: string, i: TxInput, deps: Deps): Pro
   assertValid(i);
   const prev = await deps.repo.getTransaction(id);
   if (!prev) throw new Error('거래를 찾을 수 없어요');
+  const refunded = (await deps.repo.listRefunds())
+    .filter((r) => r.originalTxId === id)
+    .reduce((s, r) => s + r.amount, 0);
+  if (refunded > 0 && (i.type !== 'expense' || i.amount < refunded)) {
+    throw new Error('환불이 연결된 거래는 지출로 두고 금액을 환불액 이상으로 입력하세요');
+  }
   const tx: Transaction = {
     ...prev,
     ...fieldsOf(i),
@@ -152,12 +160,27 @@ export async function confirmCandidate(id: string, i: TxInput, deps: Deps): Prom
   return tx;
 }
 
+/** 승인 후보와 같은 결제로 보이는 기존 거래 id. 후보가 들어온 뒤 확정된 거래도 다시 찾는다. */
+export async function findCandidateDuplicate(c: Candidate, deps: Pick<Deps, 'repo'>): Promise<string | undefined> {
+  if (c.fields.kind !== 'approval') return undefined;
+  const txs = await deps.repo.listTransactions();
+  if (c.duplicateOfTxId && txs.some((t) => t.id === c.duplicateOfTxId)) return c.duplicateOfTxId;
+  const f = c.fields;
+  const dup = findDuplicateTx(
+    { sourceApp: c.sourceApp, paymentMethodId: f.paymentMethodId, amount: f.amount, merchant: f.merchant, at: txAt(f.date, f.time), approvalNo: f.approvalNo },
+    txs,
+    await deps.repo.listRecords(),
+  );
+  return dup.kind === 'none' ? undefined : dup.id;
+}
+
 export async function mergeCandidate(id: string, deps: Deps): Promise<void> {
   const { c, record } = await loadPending(id, deps);
-  if (!c.duplicateOfTxId) throw new Error('합칠 거래가 없어요');
+  const txId = await findCandidateDuplicate(c, deps);
+  if (!txId) throw new Error('합칠 거래가 없어요');
   await deps.repo.commit({
     candidates: [closed(c, 'confirmed')],
-    records: record ? [{ ...record, outcome: 'merged', linkedTxId: c.duplicateOfTxId }] : [],
+    records: record ? [{ ...record, outcome: 'merged', linkedTxId: txId }] : [],
   });
 }
 
@@ -168,6 +191,7 @@ export async function linkCandidateRefund(
   const orig = await deps.repo.getTransaction(originalTxId);
   if (!orig || orig.type !== 'expense') throw new Error('원거래를 찾을 수 없어요');
   if (!Number.isInteger(amount) || amount < 1) throw new Error('금액을 1원 이상 입력하세요');
+  if (!DATE_RE.test(date)) throw new Error('날짜를 확인하세요');
   if (refundableAmount(orig, await deps.repo.listRefunds()) < amount) throw new Error('환불액이 남은 결제 금액보다 커요');
   const refund: Refund = { id: deps.newId(), originalTxId, amount, date, time: c.fields.date === date ? c.fields.time : undefined, createdAt: deps.now() };
   await deps.repo.commit({

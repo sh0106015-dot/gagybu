@@ -13,14 +13,18 @@ export function PasteAnalyze() {
   const analyze = async () => {
     if (!text.trim() || busy) return;
     setBusy(true);
-    const r = await ingestSafely(
-      { sourceApp: 'paste', text, receivedAt: deps.now(), notificationKey: `paste-${deps.newId()}` },
-      deps,
-      { paste: true },
-    );
-    setBusy(false);
-    setText('');
-    setResult(r.outcome === 'candidate' ? 'candidate' : r.outcome === 'ignored_non_tx' ? 'non_tx' : 'queued');
+    try {
+      const r = await ingestSafely(
+        { sourceApp: 'paste', text, receivedAt: deps.now(), notificationKey: `paste-${deps.newId()}` },
+        deps,
+        { paste: true },
+      );
+      setText('');
+      // 붙여넣기는 확인함·무시·대기 보관 중 하나로만 끝난다.
+      setResult(r.outcome === 'queued' ? 'queued' : r.outcome === 'ignored_non_tx' ? 'non_tx' : 'candidate');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

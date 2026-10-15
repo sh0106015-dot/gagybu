@@ -19,12 +19,19 @@ export function Simulator() {
   const [text, setText] = useState(presets[0].text);
   const [log, setLog] = useState<{ at: string; line: string }[]>([]);
 
+  const [sending, setSending] = useState(false);
+
   const send = async (reuseKey: boolean) => {
     const notificationKey = reuseKey ? key : deps.newId();
     setKey(notificationKey);
-    const r = await ingestSafely({ sourceApp, sender: sender.trim() || undefined, text, receivedAt: Date.now(), notificationKey }, deps);
-    const line = `${SOURCE_APP_LABEL[sourceApp]} · ${OUTCOME_LABEL[r.outcome] ?? r.outcome}`;
-    setLog((l) => [{ at: new Date().toLocaleTimeString('ko-KR'), line }, ...l].slice(0, 20));
+    setSending(true);
+    try {
+      const r = await ingestSafely({ sourceApp, sender: sender.trim() || undefined, text, receivedAt: Date.now(), notificationKey }, deps);
+      const line = `${SOURCE_APP_LABEL[sourceApp]} · ${OUTCOME_LABEL[r.outcome] ?? r.outcome}`;
+      setLog((l) => [{ at: new Date().toLocaleTimeString('ko-KR'), line }, ...l].slice(0, 20));
+    } finally {
+      setSending(false);
+    }
   };
 
   const addSamples = async () => {
@@ -64,8 +71,8 @@ export function Simulator() {
         </div>
         <label className="field"><span>알림 내용</span><textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} /></label>
         <div className="row">
-          <button type="button" className="btn btn-primary" onClick={() => send(false)}>새 알림으로 보내기</button>
-          <button type="button" className="btn" onClick={() => send(true)}>같은 알림 다시 보내기</button>
+          <button type="button" className="btn btn-primary" disabled={sending} onClick={() => send(false)}>새 알림으로 보내기</button>
+          <button type="button" className="btn" disabled={sending} onClick={() => send(true)}>같은 알림 다시 보내기</button>
         </div>
         <p className="small muted">"같은 알림 다시 보내기"는 직전 알림 키를 재사용해 재전달·내용 갱신 상황을 흉내 내요.</p>
       </div>
