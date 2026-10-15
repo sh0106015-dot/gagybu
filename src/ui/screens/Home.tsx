@@ -106,7 +106,7 @@ export function Home() {
         <ul className="summary-table">
           <li><span className="label">이번 달 순지출</span><strong className="neg">{formatWon(s.netSpend)}</strong></li>
           <li><span className="label">이번 달 수입</span><strong className="pos">{formatWon(s.income)}</strong></li>
-          <li><span className="label">환불</span><strong className="refund">{formatWon(s.refund)}</strong></li>
+          <li><span className="label">이번 달 저축</span><strong className="refund">{formatWon(s.savings)}</strong></li>
           <li>
             <span className="label">{s.remaining !== undefined && s.remaining < 0 ? '예산 초과' : '남은 예산'}</span>
             <strong>{s.remaining === undefined ? '미설정' : formatWon(Math.abs(s.remaining))}</strong>

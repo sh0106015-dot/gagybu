@@ -26,7 +26,22 @@ export const RECORD_METHOD_LABEL: Record<RecordMethod, string> = {
 export const TX_TYPE_LABEL: Record<TxType, string> = {
   expense: '지출',
   income: '수입',
-  transfer: '이체',
+  transfer: '저축',
+};
+
+/** 저축 기간. 'transfer' 유형(저축)에만 쓴다. */
+export type SavingTerm = 'short' | 'mid' | 'long';
+
+export const SAVING_TERM_LABEL: Record<SavingTerm, string> = {
+  short: '단기',
+  mid: '중기',
+  long: '장기',
+};
+
+export const SAVING_TERM_HINT: Record<SavingTerm, string> = {
+  short: '3년 이내',
+  mid: '7년 이내',
+  long: '10년 이상',
 };
 
 export interface Transaction {
@@ -46,6 +61,8 @@ export interface Transaction {
   approvalNo?: string;
   /** 월세·통신비·구독처럼 매달 고정으로 나가는 지출 */
   fixed?: boolean;
+  /** 저축 기간 (유형이 저축일 때) */
+  savingTerm?: SavingTerm;
   createdAt: number;
   updatedAt: number;
 }

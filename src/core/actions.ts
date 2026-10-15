@@ -1,7 +1,7 @@
 import { txAt } from './dates';
 import { findDuplicateTx } from './dedup';
 import type { Deps } from './deps';
-import type { Candidate, NotificationRecord, PaymentMethod, Photo, Refund, Transaction, TxType } from './model';
+import type { Candidate, NotificationRecord, PaymentMethod, Photo, Refund, SavingTerm, Transaction, TxType } from './model';
 import { refundableAmount } from './refund';
 import { matchKeyFor } from './resolve';
 
@@ -17,6 +17,8 @@ export interface TxInput {
   memo?: string;
   /** 고정지출 여부 (지출일 때만 저장) */
   fixed?: boolean;
+  /** 저축 기간 (유형이 저축일 때 필수) */
+  savingTerm?: SavingTerm;
 }
 
 const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
@@ -29,7 +31,8 @@ export function validateTxInput(i: TxInput): string | null {
   if (i.time && !TIME_RE.test(i.time)) return '시각을 확인하세요';
   if (!i.paymentMethodId) return '결제수단을 선택하세요';
   if (i.type === 'transfer') {
-    if (!i.toPaymentMethodId || i.toPaymentMethodId === i.paymentMethodId) return '출발·도착 수단을 다르게 선택하세요';
+    if (!i.savingTerm) return '저축 기간을 선택하세요';
+    if (i.toPaymentMethodId && i.toPaymentMethodId === i.paymentMethodId) return '출금 수단과 저축 계좌를 다르게 선택하세요';
   } else if (!i.categoryId) {
     return '카테고리를 선택하세요';
   }
@@ -50,9 +53,10 @@ function fieldsOf(i: TxInput) {
     merchant: clean(i.merchant),
     categoryId: i.type === 'transfer' ? '' : i.categoryId,
     paymentMethodId: i.paymentMethodId,
-    toPaymentMethodId: i.type === 'transfer' ? i.toPaymentMethodId : undefined,
+    toPaymentMethodId: i.type === 'transfer' ? i.toPaymentMethodId || undefined : undefined,
     memo: clean(i.memo),
     fixed: i.type === 'expense' && i.fixed ? true : undefined,
+    savingTerm: i.type === 'transfer' ? i.savingTerm : undefined,
   };
 }
 

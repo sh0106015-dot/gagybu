@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { monthlyTrend, summarizeMonth } from '../../core/budget';
 import { shiftMonth } from '../../core/dates';
 import { categoryBudgetStatus, categoryVsAverage, noSpendDays, spendByPaymentKind } from '../../core/insights';
-import { PAYMENT_KIND_LABEL } from '../../core/model';
+import { PAYMENT_KIND_LABEL, SAVING_TERM_HINT, SAVING_TERM_LABEL } from '../../core/model';
 import { formatWon } from '../../core/money';
 import { periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
@@ -46,12 +46,35 @@ export function Stats() {
         <div className="budget-row"><span>지출</span><strong className="neg">{formatWon(s.expense)}</strong></div>
         <div className="budget-row small muted"><span>　ㄴ 고정지출</span><span>{formatWon(s.fixedExpense)}</span></div>
         <div className="budget-row small muted"><span>　ㄴ 변동지출</span><span>{formatWon(s.variableExpense)}</span></div>
-        <div className="budget-row"><span>환불</span><strong className="refund">-{formatWon(s.refund)}</strong></div>
+        <div className="budget-row"><span>환불</span><strong className="refund">{s.refund > 0 ? '-' : ''}{formatWon(s.refund)}</strong></div>
         <div className="budget-row"><span>순지출</span><strong>{formatWon(s.netSpend)}</strong></div>
         <div className="budget-row"><span>수입</span><strong className="pos">{formatWon(s.income)}</strong></div>
+        <div className="budget-row"><span>저축</span><strong className="refund">{formatWon(s.savings)}</strong></div>
         <p className="small muted">
           전월 대비 {diff === 0 ? '변동 없음' : `${diff > 0 ? '▲ 증가' : '▼ 감소'} ${formatWon(Math.abs(diff))}`}
         </p>
+      </section>
+
+      <section className="card">
+        <div className="recap-head">
+          <Sticker pose="coin" size={44} tilt={4} />
+          <h2>저축</h2>
+        </div>
+        {s.savings === 0 ? (
+          <p className="muted small">이 달의 저축 기록이 없어요. 쓰기 → 저축에서 기록해 보세요.</p>
+        ) : (
+          <>
+            {(['short', 'mid', 'long'] as const).map((t) => (
+              <div key={t} className="hbar">
+                <span>{SAVING_TERM_LABEL[t]} <span className="small muted">{SAVING_TERM_HINT[t]}</span></span>
+                <div className="bar" aria-hidden="true"><span style={{ width: `${Math.round((s.savingsByTerm[t] / s.savings) * 100)}%` }} /></div>
+                <span className="small">{formatWon(s.savingsByTerm[t])} · {Math.round((s.savingsByTerm[t] / s.savings) * 100)}%</span>
+              </div>
+            ))}
+            {s.savingsByTerm.none > 0 && <p className="small muted">기간 미지정 {formatWon(s.savingsByTerm.none)} (예전 이체 기록)</p>}
+            {s.income > 0 && <p className="small muted" style={{ margin: '6px 0 0' }}>수입 대비 저축률 {Math.round((s.savings / s.income) * 100)}%</p>}
+          </>
+        )}
       </section>
 
       <section className="card">

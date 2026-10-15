@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { validateTxInput, type TxInput } from '../../core/actions';
 import { parseWon } from '../../core/money';
-import type { PaymentKind, PaymentMethod, TxType } from '../../core/model';
-import { PAYMENT_KIND_LABEL, TX_TYPE_LABEL } from '../../core/model';
+import type { PaymentKind, PaymentMethod, SavingTerm, TxType } from '../../core/model';
+import { PAYMENT_KIND_LABEL, SAVING_TERM_HINT, SAVING_TERM_LABEL, TX_TYPE_LABEL } from '../../core/model';
 import { useLookups } from '../hooks';
 import { today } from '../format';
 
@@ -22,6 +22,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
   const [toPaymentMethodId, setToPaymentMethodId] = useState(initial.toPaymentMethodId ?? '');
   const [memo, setMemo] = useState(initial.memo ?? '');
   const [fixed, setFixed] = useState(initial.fixed ?? false);
+  const [savingTerm, setSavingTerm] = useState<SavingTerm | undefined>(initial.savingTerm);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
@@ -45,6 +46,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
       categoryId: type === 'transfer' ? '' : categoryId, paymentMethodId,
       toPaymentMethodId: type === 'transfer' ? toPaymentMethodId : undefined, memo,
       fixed: type === 'expense' && fixed,
+      savingTerm: type === 'transfer' ? savingTerm : undefined,
     };
     const err = validateTxInput(input);
     if (err) {
@@ -96,9 +98,28 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
         </li>
         <li><label className="form-row"><span>날짜</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></label></li>
         <li><label className="form-row"><span>시각 (선택)</span><input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label></li>
-        {type !== 'transfer' && (
-          <li><label className="form-row"><span>가맹점·내용</span><input value={merchant} placeholder="선택" onChange={(e) => setMerchant(e.target.value)} /></label></li>
+        {type === 'transfer' && (
+          <li>
+            <fieldset className="term-pick">
+              <legend>저축 기간</legend>
+              <div className="term-options">
+              {(['short', 'mid', 'long'] as const).map((t) => (
+                <label key={t}>
+                  <input type="radio" name="savingTerm" value={t} checked={savingTerm === t} onChange={() => setSavingTerm(t)} />
+                  <strong>{SAVING_TERM_LABEL[t]}</strong>
+                  <span className="small">{SAVING_TERM_HINT[t]}</span>
+                </label>
+              ))}
+              </div>
+            </fieldset>
+          </li>
         )}
+        <li>
+          <label className="form-row">
+            <span>{type === 'transfer' ? '저축 상품' : '가맹점·내용'}</span>
+            <input value={merchant} placeholder={type === 'transfer' ? '예: 적금, 청년도약계좌 (선택)' : '선택'} onChange={(e) => setMerchant(e.target.value)} />
+          </label>
+        </li>
         {type !== 'transfer' && (
           <li>
             <label className="form-row">
@@ -112,7 +133,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
         )}
         <li>
           <label className="form-row">
-            <span>{type === 'transfer' ? '출발 수단' : '결제수단'}</span>
+            <span>{type === 'transfer' ? '출금 수단' : '결제수단'}</span>
             <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)} required>
               <option value="">선택하세요 ›</option>
               <MethodOptions methods={methods} />
@@ -122,9 +143,9 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
         {type === 'transfer' && (
           <li>
             <label className="form-row">
-              <span>도착 수단</span>
-              <select value={toPaymentMethodId} onChange={(e) => setToPaymentMethodId(e.target.value)} required>
-                <option value="">선택하세요 ›</option>
+              <span>저축 계좌</span>
+              <select value={toPaymentMethodId} onChange={(e) => setToPaymentMethodId(e.target.value)}>
+                <option value="">선택 안 함 ›</option>
                 <MethodOptions methods={methods} />
               </select>
             </label>

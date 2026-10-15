@@ -338,3 +338,12 @@ body {
 /* 손그림 아이콘은 예전 선 아이콘 크기 규칙(.tile-icon svg, .tab svg)을 덮어써 원래 크기로 그린다 */
 .tile-icon.art svg { width: 44px; height: 44px; }
 .tab .tab-art svg { width: 30px; height: 30px; }
+
+/* 저축 기간 선택 */
+.term-pick { border: 0; margin: 0; padding: 10px 14px; min-width: 0; }
+.term-pick legend { padding: 0 0 6px; font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+.term-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.term-pick label { display: flex; flex-direction: column; align-items: center; padding: 8px 2px; border: 1px solid var(--line-strong); border-radius: 12px; cursor: pointer; background: var(--surface-2); }
+.term-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.term-pick label:has(input:checked) { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--accent-ink); border-color: var(--accent); }
+.term-pick label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }

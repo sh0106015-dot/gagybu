@@ -17,8 +17,10 @@ describe('manual transactions', () => {
     expect(validateTxInput({ ...base, date: '2026-13-01' })).toBe('날짜를 확인하세요');
     expect(validateTxInput({ ...base, categoryId: '' })).toBe('카테고리를 선택하세요');
     expect(validateTxInput({ ...base, paymentMethodId: '' })).toBe('결제수단을 선택하세요');
-    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '', toPaymentMethodId: 'pm-cash' })).toBe('출발·도착 수단을 다르게 선택하세요');
-    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '', toPaymentMethodId: 'pm-gana' })).toBeNull();
+    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '' })).toBe('저축 기간을 선택하세요');
+    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '', savingTerm: 'short', toPaymentMethodId: 'pm-cash' })).toBe('출금 수단과 저축 계좌를 다르게 선택하세요');
+    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '', savingTerm: 'long' })).toBeNull();
+    expect(validateTxInput({ ...base, type: 'transfer', categoryId: '', savingTerm: 'mid', toPaymentMethodId: 'pm-gana' })).toBeNull();
   });
   it('saves manual and rejects invalid', async () => {
     const { repo, deps } = await setup();
@@ -127,5 +129,15 @@ describe('receipt photos follow their transaction', () => {
     expect(await repo.listPhotos(t.id)).toEqual([]);
     await restoreTransaction(snap, deps);
     expect((await repo.listPhotos(t.id)).map((p) => p.id)).toEqual(['ph']);
+  });
+});
+
+describe('savings (저축)', () => {
+  it('stores the saving term only for savings', async () => {
+    const { deps } = await setup();
+    const sv = await saveManualTransaction({ ...base, type: 'transfer', categoryId: '', merchant: '청년도약계좌', savingTerm: 'long' }, deps);
+    expect(sv).toMatchObject({ type: 'transfer', savingTerm: 'long', merchant: '청년도약계좌', categoryId: '' });
+    const ex = await saveManualTransaction({ ...base, savingTerm: 'short' }, deps);
+    expect(ex.savingTerm).toBeUndefined();
   });
 });

@@ -145,3 +145,16 @@ describe('categoryBudgetStatus', () => {
     expect(categoryBudgetStatus(s, undefined)).toEqual([]);
   });
 });
+
+describe('savings totals', () => {
+  it('sums savings by term and keeps them out of spending', () => {
+    const s = summarizeMonth('2026-10', [
+      tx({ type: 'transfer', amount: 300000, savingTerm: 'short', categoryId: '' }),
+      tx({ type: 'transfer', amount: 200000, savingTerm: 'long', categoryId: '' }),
+      tx({ type: 'transfer', amount: 50000, categoryId: '' }),
+      tx({ amount: 10000 }),
+    ], []);
+    expect(s).toMatchObject({ expense: 10000, netSpend: 10000, savings: 550000 });
+    expect(s.savingsByTerm).toEqual({ short: 300000, mid: 0, long: 200000, none: 50000 });
+  });
+});

@@ -1,6 +1,6 @@
 import { shiftMonth } from './dates';
 import { periodKey } from './period';
-import type { Budget, Refund, Transaction } from './model';
+import type { Budget, Refund, SavingTerm, Transaction } from './model';
 
 export interface MonthSummary {
   month: string;
@@ -10,6 +10,9 @@ export interface MonthSummary {
   variableExpense: number;
   refund: number;
   netSpend: number;
+  /** 저축 합계 (지출에 포함하지 않음) */
+  savings: number;
+  savingsByTerm: Record<SavingTerm | 'none', number>;
   budget?: number;
   remaining?: number;
   usageRate?: number;
@@ -23,6 +26,7 @@ export function summarizeMonth(
   let income = 0;
   let expense = 0;
   let fixedExpense = 0;
+  const savingsByTerm: Record<SavingTerm | 'none', number> = { short: 0, mid: 0, long: 0, none: 0 };
   let refund = 0;
   const byCat = new Map<string, number>();
   const add = (id: string, v: number) => byCat.set(id, (byCat.get(id) ?? 0) + v);
@@ -31,6 +35,7 @@ export function summarizeMonth(
   for (const t of txs) {
     if (periodKey(t.date, startDay) !== month) continue;
     if (t.type === 'income') income += t.amount;
+    if (t.type === 'transfer') savingsByTerm[t.savingTerm ?? 'none'] += t.amount;
     if (t.type === 'expense') {
       expense += t.amount;
       if (t.fixed) fixedExpense += t.amount;
@@ -55,6 +60,8 @@ export function summarizeMonth(
     variableExpense: expense - fixedExpense,
     refund,
     netSpend,
+    savings: savingsByTerm.short + savingsByTerm.mid + savingsByTerm.long + savingsByTerm.none,
+    savingsByTerm,
     budget: total,
     remaining: total === undefined ? undefined : total - netSpend,
     usageRate: total ? netSpend / total : undefined,

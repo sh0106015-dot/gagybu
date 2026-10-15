@@ -15,7 +15,7 @@ describe('format', () => {
   it('signed amounts', () => {
     expect(signedAmount(tx({}))).toBe('-12,000원');
     expect(signedAmount(tx({ type: 'income' }))).toBe('+12,000원');
-    expect(signedAmount(tx({ type: 'transfer' }))).toBe('12,000원');
+    expect(signedAmount(tx({ type: 'transfer' }))).toBe('🐷 12,000원');
   });
   it('sorts newest first by date, time, createdAt', () => {
     const list = [

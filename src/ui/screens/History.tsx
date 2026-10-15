@@ -48,7 +48,7 @@ export function History() {
       <section className="card trio" aria-label={`${periodLabel(month, startDay)} 합계`}>
         <div><span className="label">월간 수입</span><strong className="pos">{formatWon(ms.income)}</strong></div>
         <div><span className="label">월간 지출</span><strong className="neg">{formatWon(ms.expense)}</strong></div>
-        <div><span className="label">환불</span><strong className="refund">{formatWon(ms.refund)}</strong></div>
+        <div><span className="label">월간 저축</span><strong className="refund">{formatWon(ms.savings)}</strong></div>
       </section>
 
       <fieldset className="segmented" style={{ margin: '8px 0', padding: 0 }}>
@@ -112,6 +112,7 @@ export function History() {
         [...groups.entries()].map(([date, items]) => {
           const spend = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
           const income = items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+          const saved = items.filter((t) => t.type === 'transfer').reduce((s, t) => s + t.amount, 0);
           const [y, m, dd] = date.split('-').map(Number);
           const wd = new Date(y, m - 1, dd).getDay();
           return (
@@ -120,7 +121,8 @@ export function History() {
                 <span className={`day-title ${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''}`}>{dayLabel(date)}</span>
                 <span className="day-sum">
                   {income > 0 && <span className="pos">수입 +{formatWon(income)}</span>}
-                  <span className="neg">지출 -{formatWon(spend)}</span>
+                  {spend > 0 && <span className="neg">지출 -{formatWon(spend)}</span>}
+                  {saved > 0 && <span className="refund">저축 {formatWon(saved)}</span>}
                 </span>
               </div>
               <ul className="tx-list">

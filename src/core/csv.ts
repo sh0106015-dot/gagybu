@@ -1,5 +1,5 @@
 import type { Category, PaymentMethod, Refund, Transaction } from './model';
-import { RECORD_METHOD_LABEL, TX_TYPE_LABEL } from './model';
+import { RECORD_METHOD_LABEL, SAVING_TERM_LABEL, TX_TYPE_LABEL } from './model';
 
 const HEADER = ['날짜', '시각', '유형', '금액', '가맹점', '카테고리', '결제수단', '도착 수단', '메모', '기록 방식', '환불액'];
 
@@ -20,7 +20,7 @@ export function toCsv(txs: Transaction[], refunds: Refund[], categories: Categor
     .sort((a, b) => (a.date + (a.time ?? '')).localeCompare(b.date + (b.time ?? '')))
     .map((t) =>
       [
-        t.date, t.time, TX_TYPE_LABEL[t.type], t.amount, t.merchant, cat.get(t.categoryId),
+        t.date, t.time, t.savingTerm ? `${TX_TYPE_LABEL[t.type]}(${SAVING_TERM_LABEL[t.savingTerm]})` : TX_TYPE_LABEL[t.type], t.amount, t.merchant, cat.get(t.categoryId),
         pm.get(t.paymentMethodId), t.toPaymentMethodId ? pm.get(t.toPaymentMethodId) : undefined,
         t.memo, RECORD_METHOD_LABEL[t.recordMethod], refunded.get(t.id),
       ].map(cell).join(','),

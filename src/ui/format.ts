@@ -28,7 +28,7 @@ export function timeLabel(ms: number): string {
 export function signedAmount(t: Transaction): string {
   if (t.type === 'income') return `+${formatWon(t.amount)}`;
   if (t.type === 'expense') return `-${formatWon(t.amount)}`;
-  return formatWon(t.amount);
+  return `🐷 ${formatWon(t.amount)}`;
 }
 
 export function sortTxDesc(a: Transaction, b: Transaction): number {

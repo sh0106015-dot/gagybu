@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Transaction } from '../../core/model';
+import { SAVING_TERM_LABEL } from '../../core/model';
 import { formatWon } from '../../core/money';
 import { signedAmount } from '../format';
 
@@ -8,7 +9,7 @@ export function TxRow({ tx, refunded, catName, pmName }: {
 }) {
   const title = tx.merchant ?? tx.memo ?? catName(tx.categoryId);
   const sub = tx.type === 'transfer'
-    ? `${pmName(tx.paymentMethodId)} → ${pmName(tx.toPaymentMethodId)}`
+    ? `${tx.savingTerm ? `${SAVING_TERM_LABEL[tx.savingTerm]} 저축` : '저축'} · ${pmName(tx.paymentMethodId)}${tx.toPaymentMethodId ? ` → ${pmName(tx.toPaymentMethodId)}` : ''}`
     : `${catName(tx.categoryId)} · ${pmName(tx.paymentMethodId)}`;
   return (
     <li>
@@ -22,7 +23,7 @@ export function TxRow({ tx, refunded, catName, pmName }: {
           </span>
         </div>
         <div className="tx-amount">
-          <span className={tx.type === 'income' ? 'pos' : tx.type === 'expense' ? 'neg' : undefined}>{signedAmount(tx)}</span>
+          <span className={tx.type === 'income' ? 'pos' : tx.type === 'expense' ? 'neg' : 'refund'}>{signedAmount(tx)}</span>
           {refunded ? <span className="small refund">환불 {formatWon(refunded)}</span> : null}
         </div>
       </Link>

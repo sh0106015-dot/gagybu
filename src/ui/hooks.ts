@@ -23,7 +23,7 @@ export function useLookups() {
     return {
       categories,
       methods,
-      catName: (id: string) => (id ? cat.get(id) ?? '삭제된 카테고리' : '이체'),
+      catName: (id: string) => (id ? cat.get(id) ?? '삭제된 카테고리' : '저축'),
       pmName: (id?: string) => (id ? pm.get(id) ?? '삭제된 수단' : '-'),
     };
   });
