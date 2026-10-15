@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#2f6f5e"/>
+  <rect x="128" y="120" width="256" height="300" rx="28" fill="#ffffff"/>
+  <rect x="168" y="180" width="176" height="24" rx="12" fill="#2f6f5e"/>
+  <rect x="168" y="236" width="128" height="24" rx="12" fill="#9cc7b9"/>
+  <rect x="168" y="292" width="152" height="24" rx="12" fill="#9cc7b9"/>
+  <circle cx="352" cy="376" r="64" fill="#f0b350"/>
+  <text x="352" y="398" font-size="64" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#ffffff">₩</text>
+</svg>
