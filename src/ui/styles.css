@@ -1,36 +1,36 @@
 :root {
-  --bg: #fdf6ea;
+  --bg: #f5f0fb;
   --surface: #ffffff;
-  --surface-2: #fff9f0;
-  --text: #4a3b2c;
-  --muted: #8a7764;
-  --line: #f0dfc6;
-  --line-strong: #e6cba4;
-  --accent: #f0932b;
-  --accent-2: #f7b04f;
+  --surface-2: #faf7fd;
+  --text: #3d3350;
+  --muted: #7b6e8e;
+  --line: #e7ddf3;
+  --line-strong: #d3c3ea;
+  --accent: #8e62c6;
+  --accent-2: #b48fe0;
   --accent-ink: #ffffff;
-  --accent-soft: #fdebd2;
+  --accent-soft: #eee4fa;
   --neg: #d9473a;
   --pos: #2b78c9;
   --refund: #3a9145;
-  --warn: #c77700;
+  --warn: #b26a00;
   --radius: 16px;
-  --shadow: 0 2px 0 rgb(230 203 164 / 0.6);
+  --shadow: 0 2px 0 rgb(211 195 234 / 0.6);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1d1712;
-    --surface: #2a221a;
-    --surface-2: #31281f;
-    --text: #f3e6d5;
-    --muted: #bba68e;
-    --line: #43362a;
-    --line-strong: #574634;
-    --accent: #f3a043;
-    --accent-2: #f7b65f;
-    --accent-ink: #2a1a08;
-    --accent-soft: #46331d;
+    --bg: #1b1623;
+    --surface: #251f2f;
+    --surface-2: #2c2538;
+    --text: #efe7fa;
+    --muted: #b3a5c6;
+    --line: #3b3149;
+    --line-strong: #4d405f;
+    --accent: #c3a2ec;
+    --accent-2: #d5bcf4;
+    --accent-ink: #24162f;
+    --accent-soft: #3b2d4f;
     --neg: #ff8a7a;
     --pos: #7db8f0;
     --refund: #7fcb87;
@@ -40,17 +40,17 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1d1712;
-  --surface: #2a221a;
-  --surface-2: #31281f;
-  --text: #f3e6d5;
-  --muted: #bba68e;
-  --line: #43362a;
-  --line-strong: #574634;
-  --accent: #f3a043;
-  --accent-2: #f7b65f;
-  --accent-ink: #2a1a08;
-  --accent-soft: #46331d;
+  --bg: #1b1623;
+  --surface: #251f2f;
+  --surface-2: #2c2538;
+  --text: #efe7fa;
+  --muted: #b3a5c6;
+  --line: #3b3149;
+  --line-strong: #4d405f;
+  --accent: #c3a2ec;
+  --accent-2: #d5bcf4;
+  --accent-ink: #24162f;
+  --accent-soft: #3b2d4f;
   --neg: #ff8a7a;
   --pos: #7db8f0;
   --refund: #7fcb87;
@@ -298,7 +298,7 @@ pre.excerpt { white-space: pre-wrap; background: var(--surface-2); border: 1px s
 .photo-viewer img { max-width: 100%; max-height: 80vh; border-radius: 8px; }
 
 /* 일러스트 · 스티커 */
-:root { --grid: rgb(230 203 164 / 0.28); --sticker-bg: #ffffff; }
+:root { --grid: rgb(180 143 224 / 0.16); --sticker-bg: #ffffff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --grid: rgb(255 255 255 / 0.04); --sticker-bg: #3a2f25; } }
 :root[data-theme="dark"] { --grid: rgb(255 255 255 / 0.04); --sticker-bg: #3a2f25; }
 body {
@@ -311,7 +311,7 @@ body {
 .sticker {
   display: inline-grid; place-items: center; flex: none;
   background: var(--sticker-bg); border-radius: 22px; padding: 2px;
-  box-shadow: 0 0 0 3px var(--sticker-bg), 0 3px 8px rgb(91 70 54 / 0.18);
+  box-shadow: 0 0 0 3px var(--sticker-bg), 0 3px 8px rgb(92 64 130 / 0.18);
 }
 .bunny { display: block; overflow: visible; }
 
