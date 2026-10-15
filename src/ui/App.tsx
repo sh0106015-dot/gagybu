@@ -25,6 +25,13 @@ export default function App() {
   const app = useLive((r) => r.getAppSettings());
   const [unlocked, setUnlocked] = useState(false);
 
+  const theme = app?.theme ?? 'auto';
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'auto') delete root.dataset.theme;
+    else root.dataset.theme = theme;
+  }, [theme]);
+
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === 'hidden') setUnlocked(false);

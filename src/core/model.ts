@@ -50,6 +50,15 @@ export interface Transaction {
   updatedAt: number;
 }
 
+/** 거래에 붙인 영수증 사진. 기기 안에만 저장한다. */
+export interface Photo {
+  id: string;
+  txId: string;
+  /** 줄여서 저장한 JPEG data URL */
+  dataUrl: string;
+  createdAt: number;
+}
+
 export interface Refund {
   id: string;
   originalTxId: string;
@@ -181,6 +190,8 @@ export interface AppSettings {
   pinSalt?: string;
   /** 가계부 한 달의 시작일 (1~28). 없으면 1일. */
   monthStartDay?: number;
+  /** 화면 테마. 없거나 'auto'면 휴대폰 설정을 따른다. */
+  theme?: 'auto' | 'light' | 'dark';
 }
 
 export interface NotificationInput {

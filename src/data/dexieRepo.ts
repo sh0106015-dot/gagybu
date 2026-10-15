@@ -8,7 +8,7 @@ export function createDexieRepo(db: GagyebuDB): Repo {
     ((await db.kv.get(key))?.value as T | undefined) ?? structuredClone(fallback);
   const dataTables = () => [
     db.transactions, db.refunds, db.candidates, db.records, db.categories,
-    db.paymentMethods, db.budgets, db.kv, db.pending,
+    db.paymentMethods, db.budgets, db.kv, db.pending, db.photos,
   ];
 
   return {
@@ -26,6 +26,8 @@ export function createDexieRepo(db: GagyebuDB): Repo {
         if (b.deleteTransactionIds?.length) await db.transactions.bulkDelete(b.deleteTransactionIds);
         if (b.deleteRefundIds?.length) await db.refunds.bulkDelete(b.deleteRefundIds);
         if (b.deleteCandidateIds?.length) await db.candidates.bulkDelete(b.deleteCandidateIds);
+        if (b.photos?.length) await db.photos.bulkPut(b.photos);
+        if (b.deletePhotoIds?.length) await db.photos.bulkDelete(b.deletePhotoIds);
       });
     },
     getTransaction: (id) => db.transactions.get(id),
@@ -40,6 +42,7 @@ export function createDexieRepo(db: GagyebuDB): Repo {
     listCategories: () => db.categories.toArray(),
     listPaymentMethods: () => db.paymentMethods.toArray(),
     getBudget: (month) => db.budgets.get(month),
+    listPhotos: (txId) => db.photos.where('txId').equals(txId).sortBy('createdAt'),
     getAutoSettings: () => kvGet<AutoRecordSettings>('autoSettings', DEFAULT_AUTO_SETTINGS),
     getAppSettings: () => kvGet<AppSettings>('appSettings', DEFAULT_APP_SETTINGS),
     async enqueuePending(item) { await db.pending.put(item); },

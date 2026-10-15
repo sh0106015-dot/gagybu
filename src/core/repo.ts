@@ -1,6 +1,6 @@
 import type {
   AppSettings, AutoRecordSettings, Budget, Candidate, Category, NotificationRecord,
-  PaymentMethod, PendingItem, Refund, SourceApp, Transaction,
+  PaymentMethod, PendingItem, Photo, Refund, SourceApp, Transaction,
 } from './model';
 
 export interface WriteBatch {
@@ -16,6 +16,8 @@ export interface WriteBatch {
   deleteTransactionIds?: string[];
   deleteRefundIds?: string[];
   deleteCandidateIds?: string[];
+  photos?: Photo[];
+  deletePhotoIds?: string[];
 }
 
 export interface Repo {
@@ -32,6 +34,7 @@ export interface Repo {
   listCategories(): Promise<Category[]>;
   listPaymentMethods(): Promise<PaymentMethod[]>;
   getBudget(month: string): Promise<Budget | undefined>;
+  listPhotos(txId: string): Promise<Photo[]>;
   getAutoSettings(): Promise<AutoRecordSettings>;
   getAppSettings(): Promise<AppSettings>;
   enqueuePending(item: PendingItem): Promise<void>;

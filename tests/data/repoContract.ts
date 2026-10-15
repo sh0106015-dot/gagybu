@@ -62,10 +62,21 @@ export function runRepoContract(name: string, make: () => Promise<Repo>) {
       await repo.removePending('q1');
       expect(await repo.listPending()).toEqual([]);
     });
+    it('stores photos per transaction and deletes them', async () => {
+      const repo = await make();
+      await repo.commit({ photos: [
+        { id: 'ph1', txId: 't1', dataUrl: 'data:image/jpeg;base64,AA', createdAt: 1 },
+        { id: 'ph2', txId: 't2', dataUrl: 'data:image/jpeg;base64,BB', createdAt: 2 },
+      ] });
+      expect((await repo.listPhotos('t1')).map((p) => p.id)).toEqual(['ph1']);
+      await repo.commit({ deletePhotoIds: ['ph1'] });
+      expect(await repo.listPhotos('t1')).toEqual([]);
+    });
     it('clearAll wipes everything', async () => {
       const repo = await make();
-      await repo.commit({ transactions: [tx()], budgets: [{ month: '2026-10', total: 1 }] });
+      await repo.commit({ transactions: [tx()], budgets: [{ month: '2026-10', total: 1 }], photos: [{ id: 'ph', txId: 't1', dataUrl: 'x', createdAt: 1 }] });
       await repo.clearAll();
+      expect(await repo.listPhotos('t1')).toEqual([]);
       expect(await repo.listTransactions()).toEqual([]);
       expect(await repo.getBudget('2026-10')).toBeUndefined();
     });

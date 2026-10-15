@@ -1,7 +1,7 @@
 import { txAt } from './dates';
 import { findDuplicateTx } from './dedup';
 import type { Deps } from './deps';
-import type { Candidate, NotificationRecord, PaymentMethod, Refund, Transaction, TxType } from './model';
+import type { Candidate, NotificationRecord, PaymentMethod, Photo, Refund, Transaction, TxType } from './model';
 import { refundableAmount } from './refund';
 import { matchKeyFor } from './resolve';
 
@@ -92,6 +92,7 @@ export interface DeletedSnapshot {
   tx: Transaction;
   refunds: Refund[];
   records: NotificationRecord[];
+  photos: Photo[];
 }
 
 export async function deleteTransaction(id: string, deps: Deps): Promise<DeletedSnapshot> {
@@ -109,12 +110,16 @@ export async function deleteTransaction(id: string, deps: Deps): Promise<Deleted
     linkedTxId: r.linkedTxId === id ? undefined : r.linkedTxId,
     linkedRefundId: r.linkedRefundId && refundIds.has(r.linkedRefundId) ? undefined : r.linkedRefundId,
   }));
-  await repo.commit({ deleteTransactionIds: [id], deleteRefundIds: [...refundIds], records: unlinked });
-  return { tx, refunds, records };
+  const photos = await repo.listPhotos(id);
+  await repo.commit({
+    deleteTransactionIds: [id], deleteRefundIds: [...refundIds], records: unlinked,
+    deletePhotoIds: photos.map((p) => p.id),
+  });
+  return { tx, refunds, records, photos };
 }
 
 export async function restoreTransaction(s: DeletedSnapshot, deps: Deps): Promise<void> {
-  await deps.repo.commit({ transactions: [s.tx], refunds: s.refunds, records: s.records });
+  await deps.repo.commit({ transactions: [s.tx], refunds: s.refunds, records: s.records, photos: s.photos });
 }
 
 export function candidateToInput(c: Candidate): Partial<TxInput> {

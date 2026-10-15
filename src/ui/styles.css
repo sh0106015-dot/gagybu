@@ -19,7 +19,7 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #1d1712;
     --surface: #2a221a;
     --surface-2: #31281f;
@@ -38,6 +38,25 @@
     --shadow: 0 2px 0 rgb(0 0 0 / 0.35);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #1d1712;
+  --surface: #2a221a;
+  --surface-2: #31281f;
+  --text: #f3e6d5;
+  --muted: #bba68e;
+  --line: #43362a;
+  --line-strong: #574634;
+  --accent: #f3a043;
+  --accent-2: #f7b65f;
+  --accent-ink: #2a1a08;
+  --accent-soft: #46331d;
+  --neg: #ff8a7a;
+  --pos: #7db8f0;
+  --refund: #7fcb87;
+  --warn: #f0b350;
+  --shadow: 0 2px 0 rgb(0 0 0 / 0.35);
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { font-size: 100%; }
@@ -264,3 +283,16 @@ pre.excerpt { white-space: pre-wrap; background: var(--surface-2); border: 1px s
 .cal-selected { background: var(--accent-soft); border-color: var(--accent); }
 .cal-num { font-size: 0.8rem; font-weight: 700; }
 .cal-amt { font-size: 0.66rem; font-weight: 700; line-height: 1.1; white-space: nowrap; }
+
+/* 영수증 사진 */
+.photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; margin-top: 8px; }
+.photo { position: relative; aspect-ratio: 1; }
+.photo-open { width: 100%; height: 100%; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: zoom-in; background: var(--surface-2); }
+.photo-open img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-del { position: absolute; top: -6px; right: -6px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--neg); color: #fff; font-weight: 800; cursor: pointer; }
+.photo-add { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px dashed var(--line-strong); border-radius: 10px; color: var(--accent); cursor: pointer; font-size: 1.4rem; }
+.photo-add input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.photo-add:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+.photo-add.is-busy { opacity: 0.6; }
+.photo-viewer { position: fixed; inset: 0; z-index: 20; background: rgb(0 0 0 / 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+.photo-viewer img { max-width: 100%; max-height: 80vh; border-radius: 8px; }

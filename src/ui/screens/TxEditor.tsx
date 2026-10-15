@@ -6,6 +6,7 @@ import { useServices } from '../AppContext';
 import { useLive } from '../hooks';
 import { dayLabel, timeLabel } from '../format';
 import { PageHeader } from '../components/PageHeader';
+import { ReceiptPhotos } from '../components/ReceiptPhotos';
 import { TxForm } from '../components/TxForm';
 import { useUndo } from '../components/Undo';
 
@@ -29,6 +30,7 @@ export function TxEditor() {
       <div className="page">
         <PageHeader title="가계부 입력" back />
         <TxForm initial={{}} submitLabel="입력" onSubmit={async (i) => { await saveManualTransaction(i, deps); navigate(-1); }} />
+        <p className="small muted">영수증 사진은 저장한 뒤 거래를 눌러 상세 화면에서 붙일 수 있어요.</p>
       </div>
     );
   }
@@ -69,6 +71,8 @@ export function TxEditor() {
           </>
         )}
       </section>
+
+      <ReceiptPhotos txId={tx.id} />
 
       <TxForm
         key={tx.updatedAt}

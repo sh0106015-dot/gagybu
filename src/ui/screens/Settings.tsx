@@ -1,5 +1,14 @@
 import { Link } from 'react-router-dom';
+import type { AppSettings } from '../../core/model';
+import { useServices } from '../AppContext';
+import { useLive } from '../hooks';
 import { PageHeader } from '../components/PageHeader';
+
+const THEMES: { value: NonNullable<AppSettings['theme']>; label: string }[] = [
+  { value: 'auto', label: '자동' },
+  { value: 'light', label: '라이트' },
+  { value: 'dark', label: '다크' },
+];
 
 const ITEMS = [
   { to: '/settings/budget', label: '월 예산' },
@@ -14,9 +23,29 @@ const ITEMS = [
 ];
 
 export function Settings() {
+  const { repo } = useServices();
+  const app = useLive((r) => r.getAppSettings());
+  const theme = app?.theme ?? 'auto';
   return (
     <div className="page">
       <PageHeader title="설정" />
+      <section className="card form">
+        <fieldset className="segmented" style={{ margin: 0, padding: 0 }}>
+          <legend className="small muted" style={{ padding: '0 0 6px' }}>화면 테마 (자동은 휴대폰 설정을 따라요)</legend>
+          {THEMES.map((t) => (
+            <label key={t.value}>
+              <input
+                type="radio"
+                name="theme"
+                checked={theme === t.value}
+                disabled={!app}
+                onChange={() => app && repo.commit({ appSettings: { ...app, theme: t.value } })}
+              />
+              {t.label}
+            </label>
+          ))}
+        </fieldset>
+      </section>
       <ul className="list">
         {ITEMS.map((i) => (
           <li key={i.to}><Link to={i.to} className="item"><span>{i.label}</span><span aria-hidden="true">›</span></Link></li>

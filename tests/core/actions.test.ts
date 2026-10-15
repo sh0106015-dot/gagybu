@@ -117,3 +117,15 @@ describe('inbox actions', () => {
     expect(await repo.listCandidates()).toHaveLength(0);
   });
 });
+
+describe('receipt photos follow their transaction', () => {
+  it('delete removes photos and undo restores them', async () => {
+    const { repo, deps } = await setup();
+    const t = await saveManualTransaction(base, deps);
+    await repo.commit({ photos: [{ id: 'ph', txId: t.id, dataUrl: 'data:image/jpeg;base64,AA', createdAt: 1 }] });
+    const snap = await deleteTransaction(t.id, deps);
+    expect(await repo.listPhotos(t.id)).toEqual([]);
+    await restoreTransaction(snap, deps);
+    expect((await repo.listPhotos(t.id)).map((p) => p.id)).toEqual(['ph']);
+  });
+});
