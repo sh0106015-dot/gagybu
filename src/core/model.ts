@@ -39,8 +39,8 @@ export const SAVING_TERM_LABEL: Record<SavingTerm, string> = {
 };
 
 export const SAVING_TERM_HINT: Record<SavingTerm, string> = {
-  short: '3년 이내',
-  mid: '7년 이내',
+  short: '5년 이내',
+  mid: '5년 이상',
   long: '10년 이상',
 };
 
