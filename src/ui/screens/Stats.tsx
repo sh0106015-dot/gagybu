@@ -10,6 +10,7 @@ import { currentPeriod, today } from '../format';
 import { MonthNav } from '../components/MonthNav';
 import { NoSpendCalendar } from '../components/NoSpendCalendar';
 import { PageHeader } from '../components/PageHeader';
+import { Sticker } from '../art/Bunny';
 
 export function Stats() {
   const startDay = useStartDay();
@@ -54,7 +55,10 @@ export function Stats() {
       </section>
 
       <section className="card">
-        <h2>무지출 챌린지</h2>
+        <div className="recap-head">
+          <Sticker pose="party" size={44} tilt={-5} />
+          <h2>무지출 챌린지</h2>
+        </div>
         <p className="small" style={{ margin: '4px 0' }}>
           <strong className="refund">○ 무지출 {ns.count}일</strong>
           <span className="muted"> / 지난 {ns.elapsed}일 · ● 지출한 날 · 고정지출은 세지 않아요</span>

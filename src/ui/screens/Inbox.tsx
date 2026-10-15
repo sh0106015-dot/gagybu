@@ -4,6 +4,7 @@ import { REASON_LABEL, SOURCE_APP_LABEL } from '../../core/model';
 import { useLive } from '../hooks';
 import { dayLabel } from '../format';
 import { PageHeader } from '../components/PageHeader';
+import { EmptyArt } from '../art/Scenes';
 
 export function Inbox() {
   const list = useLive(async (repo) =>
@@ -16,7 +17,7 @@ export function Inbox() {
       <PageHeader title="확인함" back />
       <p className="small muted">확인 전 내역은 예산과 통계에 포함되지 않아요. 30일이 지나면 자동으로 지워져요.</p>
       {list.length === 0 ? (
-        <p className="empty">확인할 내역이 없어요.</p>
+        <EmptyArt pose="party">확인할 내역이 없어요. 모두 정리했어요!</EmptyArt>
       ) : (
         <ul className="list">
           {list.map((c) => (

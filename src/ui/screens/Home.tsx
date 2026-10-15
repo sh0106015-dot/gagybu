@@ -7,7 +7,9 @@ import { daysIntoPeriod, periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
 import { currentPeriod, sortTxDesc, timeLabel, today } from '../format';
 import { BudgetBar } from '../components/BudgetBar';
-import { Icon, type IconName } from '../components/Icon';
+import { Sticker, type BunnyPose } from '../art/Bunny';
+import { MenuArt, type MenuArtName } from '../art/MenuArt';
+import { EmptyArt, Hero } from '../art/Scenes';
 import { TxRow } from '../components/TxRow';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -49,22 +51,39 @@ export function Home() {
       : `자동 기록 켜짐${a.lastProcessedAt ? ` · 마지막 처리 ${timeLabel(a.lastProcessedAt)}` : ' · 아직 처리한 알림 없음'}`;
   const autoState = !a.enabled ? 'off' : a.permission !== 'granted' ? 'warn' : 'on';
 
-  const menu: { to: string; label: string; icon: IconName; badge?: number }[] = [
-    { to: '/tx/new', label: '쓰기', icon: 'pencil' },
+  const menu: { to: string; label: string; icon: MenuArtName; badge?: number }[] = [
+    { to: '/tx/new', label: '쓰기', icon: 'write' },
     { to: '/history', label: '내역', icon: 'list' },
     { to: '/stats', label: '통계', icon: 'chart' },
     { to: '/inbox', label: '확인함', icon: 'inbox', badge: data.pending },
-    { to: '/settings/budget', label: '예산', icon: 'wallet' },
-    { to: '/settings', label: '설정', icon: 'gear' },
+    { to: '/settings/budget', label: '예산', icon: 'budget' },
+    { to: '/settings', label: '설정', icon: 'settings' },
   ];
+
+  // 예산 상황에 따라 토리의 표정과 인사말이 바뀐다.
+  const mood: { pose: BunnyPose; title: string; message: string } =
+    s.remaining === undefined
+      ? { pose: 'wave', title: '안녕하세요, 토리예요!', message: '이번 달 예산을 정하면 남은 돈을 알려드릴게요.' }
+      : s.remaining < 0
+        ? { pose: 'worry', title: '예산을 넘었어요', message: `${formatWon(-s.remaining)} 초과했어요. 남은 날은 조금만 아껴 봐요.` }
+        : (s.usageRate ?? 0) >= 0.8
+          ? { pose: 'worry', title: '예산을 80% 넘게 썼어요', message: `남은 예산은 ${formatWon(s.remaining)}이에요.` }
+          : d.expense === 0
+            ? { pose: 'party', title: '오늘은 아직 무지출!', message: `남은 예산 ${formatWon(s.remaining)} · 이대로 쭉 가 봐요.` }
+            : { pose: 'coin', title: '슬기롭게 쓰고 있어요', message: `남은 예산은 ${formatWon(s.remaining)}이에요.` };
 
   return (
     <div className="page">
       <header className="page-header"><h1>가계부</h1></header>
 
+      <Hero pose={mood.pose} title={mood.title} message={mood.message} />
+
       {showRecap && prev.expense + prev.income > 0 && (
         <section className="card recap" aria-label="지난달 결산">
-          <p className="card-title">📋 지난달 결산 · {periodLabel(prevMonth, startDay)}</p>
+          <div className="recap-head">
+            <Sticker pose="write" size={48} tilt={-6} />
+            <p className="card-title" style={{ margin: 0 }}>지난달 결산 · {periodLabel(prevMonth, startDay)}</p>
+          </div>
           <div className="budget-row"><span>순지출</span><strong className="neg">{formatWon(prev.netSpend)}</strong></div>
           {prev.remaining !== undefined && (
             <div className="budget-row">
@@ -109,7 +128,7 @@ export function Home() {
       </section>
 
       <Link to="/stats" className="card nospend">
-        <span className="nospend-badge" aria-hidden="true">🌱</span>
+        <Sticker pose={ns.count > 0 ? 'party' : 'coin'} size={48} tilt={5} />
         <span>
           <strong>무지출 {ns.count}일</strong>
           <span className="small muted"> / 지난 {ns.elapsed}일 중</span>
@@ -130,7 +149,7 @@ export function Home() {
       <nav className="menu-grid" aria-label="바로가기">
         {menu.map((m) => (
           <Link key={m.to} to={m.to} className="tile">
-            <span className="tile-icon"><Icon name={m.icon} /></span>
+            <span className="tile-icon art"><MenuArt name={m.icon} /></span>
             <span>{m.label}</span>
             {m.badge ? <span className="tile-badge" aria-label={`확인 필요 ${m.badge}건`}>{m.badge}</span> : null}
           </Link>
@@ -148,7 +167,7 @@ export function Home() {
           <Link to="/history">전체 보기</Link>
         </div>
         {recent.length === 0 ? (
-          <p className="empty">아직 거래가 없어요. ‘쓰기’로 첫 거래를 기록해 보세요.</p>
+          <EmptyArt>아직 거래가 없어요. ‘쓰기’로 첫 거래를 기록해 보세요.</EmptyArt>
         ) : (
           <ul className="tx-list">
             {recent.map((t) => (

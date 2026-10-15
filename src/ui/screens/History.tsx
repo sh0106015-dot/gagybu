@@ -12,6 +12,7 @@ import { EMPTY_FILTER, filterTransactions, type TxFilter } from '../filter';
 import { MonthNav } from '../components/MonthNav';
 import { PageHeader } from '../components/PageHeader';
 import { TxRow } from '../components/TxRow';
+import { EmptyArt } from '../art/Scenes';
 
 export function History() {
   const startDay = useStartDay();
@@ -104,7 +105,9 @@ export function History() {
       </div>
 
       {list.length === 0 ? (
-        <p className="empty">{view === 'calendar' ? (day ? '이 날은 거래가 없어요.' : '날짜를 누르면 그날 거래가 보여요.') : '이 달에 해당하는 거래가 없어요.'}</p>
+        <EmptyArt pose={view === 'calendar' && !day ? 'write' : 'sleep'}>
+          {view === 'calendar' ? (day ? '이 날은 거래가 없어요.' : '날짜를 누르면 그날 거래가 보여요.') : '이 달에 해당하는 거래가 없어요.'}
+        </EmptyArt>
       ) : (
         [...groups.entries()].map(([date, items]) => {
           const spend = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);

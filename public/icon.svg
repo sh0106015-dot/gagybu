@@ -1,9 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#2f6f5e"/>
-  <rect x="128" y="120" width="256" height="300" rx="28" fill="#ffffff"/>
-  <rect x="168" y="180" width="176" height="24" rx="12" fill="#2f6f5e"/>
-  <rect x="168" y="236" width="128" height="24" rx="12" fill="#9cc7b9"/>
-  <rect x="168" y="292" width="152" height="24" rx="12" fill="#9cc7b9"/>
-  <circle cx="352" cy="376" r="64" fill="#f0b350"/>
-  <text x="352" y="398" font-size="64" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#ffffff">₩</text>
+  <rect width="512" height="512" rx="112" fill="#f7b04f"/>
+  <path d="M0 360h512v40q0 112-112 112H112Q0 512 0 400z" fill="#f0932b"/>
+  <g stroke="#5b4636" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="196" cy="140" rx="38" ry="92" fill="#fff7ea" transform="rotate(-12 196 140)"/>
+    <ellipse cx="316" cy="140" rx="38" ry="92" fill="#fff7ea" transform="rotate(12 316 140)"/>
+    <ellipse cx="256" cy="300" rx="132" ry="112" fill="#fff7ea"/>
+  </g>
+  <ellipse cx="196" cy="148" rx="16" ry="58" fill="#f6c7c2" transform="rotate(-12 196 148)"/>
+  <ellipse cx="316" cy="148" rx="16" ry="58" fill="#f6c7c2" transform="rotate(12 316 148)"/>
+  <circle cx="208" cy="292" r="12" fill="#5b4636"/>
+  <circle cx="304" cy="292" r="12" fill="#5b4636"/>
+  <ellipse cx="180" cy="328" rx="22" ry="13" fill="#f4a8a0" opacity="0.8"/>
+  <ellipse cx="332" cy="328" rx="22" ry="13" fill="#f4a8a0" opacity="0.8"/>
+  <path d="M238 322q18 18 36 0" fill="none" stroke="#5b4636" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="372" cy="396" r="56" fill="#f4c95d" stroke="#5b4636" stroke-width="9"/>
+  <text x="372" y="420" font-size="68" font-weight="800" font-family="sans-serif" text-anchor="middle" fill="#5b4636">₩</text>
 </svg>
