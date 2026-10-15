@@ -13,6 +13,7 @@ import { currentPeriod, dayLabel, sortTxDesc, today } from '../format';
 import { EMPTY_FILTER, filterTransactions, type TxFilter } from '../filter';
 import { Sticker } from '../art/Bunny';
 import { EmptyArt } from '../art/Scenes';
+import { MemoTab } from '../components/MemoTab';
 import { TxRow } from '../components/TxRow';
 
 type Tab = 'daily' | 'calendar' | 'monthly' | 'settle' | 'memo';
@@ -256,25 +257,9 @@ export function History() {
 
       {tab === 'settle' && <Settlement month={month} startDay={startDay} txs={data.txs} refunds={data.refunds} lookups={lookups} />}
 
-      {tab === 'memo' && (() => {
-        const memos = filtered.filter((t) => t.memo);
-        if (!memos.length) return <EmptyArt pose="write">메모가 있는 거래가 없어요. 거래를 입력할 때 메모를 남겨 보세요.</EmptyArt>;
-        return (
-          <ul className="list" style={{ marginTop: 10 }}>
-            {memos.map((t) => (
-              <li key={t.id}>
-                <Link to={`/tx/${t.id}`} className="item memo-item">
-                  <span>
-                    <span className="small muted">{dayLabel(t.date)} · {t.merchant ?? lookups.catName(t.categoryId)}</span>
-                    <span className="memo-text">{t.memo}</span>
-                  </span>
-                  <strong className={t.type === 'income' ? 'pos' : t.type === 'expense' ? 'neg' : 'refund'}>{formatWon(t.amount)}</strong>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        );
-      })()}
+      {tab === 'memo' && (
+        <MemoTab month={month} startDay={startDay} txs={filtered} query={f.query} catName={lookups.catName} />
+      )}
 
       <Link to="/tx/new" className="fab" aria-label="거래 추가">+</Link>
     </div>

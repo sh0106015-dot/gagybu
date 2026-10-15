@@ -67,6 +67,15 @@ export interface Transaction {
   updatedAt: number;
 }
 
+/** 메모 탭에서 거래와 상관없이 쓰는 메모 */
+export interface Note {
+  id: string;
+  date: string;
+  text: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** 거래에 붙인 영수증 사진. 기기 안에만 저장한다. */
 export interface Photo {
   id: string;

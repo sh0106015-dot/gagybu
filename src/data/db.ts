@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type {
-  Budget, Candidate, Category, NotificationRecord, PaymentMethod, PendingItem, Photo, Refund, Transaction,
+  Budget, Candidate, Category, Note, NotificationRecord, PaymentMethod, PendingItem, Photo, Refund, Transaction,
 } from '../core/model';
 
 export interface KvRow {
@@ -19,6 +19,7 @@ export class GagyebuDB extends Dexie {
   kv!: Table<KvRow, string>;
   pending!: Table<PendingItem, string>;
   photos!: Table<Photo, string>;
+  notes!: Table<Note, string>;
 
   constructor(name = 'gagyebu') {
     super(name);
@@ -34,5 +35,6 @@ export class GagyebuDB extends Dexie {
       pending: 'id',
     });
     this.version(2).stores({ photos: 'id, txId' });
+    this.version(3).stores({ notes: 'id, date' });
   }
 }

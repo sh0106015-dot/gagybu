@@ -403,3 +403,13 @@ body {
 .history .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
 .wname { display: flex; flex-direction: column; }
 .history { padding-bottom: 96px; }
+
+/* 메모 탭 */
+.memo-compose { margin-top: 10px; }
+.memo-compose-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.memo-date input { border: 1px solid var(--line-strong); border-radius: 8px; padding: 4px 8px; background: var(--surface-2); min-height: 36px; }
+.memo-compose textarea { resize: vertical; }
+.memo-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.memo-actions { display: flex; gap: 6px; flex: none; }
+.btn-sm { min-height: 34px; padding: 4px 10px; font-size: 0.85rem; border-radius: 9px; }
+.memo-editing { background: var(--accent-soft); }

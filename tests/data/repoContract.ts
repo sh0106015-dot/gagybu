@@ -72,10 +72,20 @@ export function runRepoContract(name: string, make: () => Promise<Repo>) {
       await repo.commit({ deletePhotoIds: ['ph1'] });
       expect(await repo.listPhotos('t1')).toEqual([]);
     });
+    it('stores, updates and deletes notes', async () => {
+      const repo = await make();
+      await repo.commit({ notes: [{ id: 'n1', date: '2026-10-16', text: '장보기 목록', createdAt: 1, updatedAt: 1 }] });
+      await repo.commit({ notes: [{ id: 'n1', date: '2026-10-16', text: '장보기 목록 수정', createdAt: 1, updatedAt: 2 }] });
+      expect((await repo.listNotes()).map((x) => x.text)).toEqual(['장보기 목록 수정']);
+      await repo.commit({ deleteNoteIds: ['n1'] });
+      expect(await repo.listNotes()).toEqual([]);
+    });
     it('clearAll wipes everything', async () => {
       const repo = await make();
       await repo.commit({ transactions: [tx()], budgets: [{ month: '2026-10', total: 1 }], photos: [{ id: 'ph', txId: 't1', dataUrl: 'x', createdAt: 1 }] });
+      await repo.commit({ notes: [{ id: 'n', date: '2026-10-16', text: 'x', createdAt: 1, updatedAt: 1 }] });
       await repo.clearAll();
+      expect(await repo.listNotes()).toEqual([]);
       expect(await repo.listPhotos('t1')).toEqual([]);
       expect(await repo.listTransactions()).toEqual([]);
       expect(await repo.getBudget('2026-10')).toBeUndefined();

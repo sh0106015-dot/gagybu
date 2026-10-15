@@ -1,7 +1,7 @@
 import type { Repo, WriteBatch } from '../core/repo';
 import type {
   AppSettings, AutoRecordSettings, Budget, Candidate, Category, NotificationRecord,
-  PaymentMethod, PendingItem, Photo, Refund, Transaction,
+  Note, PaymentMethod, PendingItem, Photo, Refund, Transaction,
 } from '../core/model';
 import { DEFAULT_APP_SETTINGS, DEFAULT_AUTO_SETTINGS } from '../core/model';
 
@@ -17,6 +17,7 @@ export function createMemoryRepo(): Repo {
   let budgets = new Map<string, Budget>();
   let pending = new Map<string, PendingItem>();
   let photos = new Map<string, Photo>();
+  let notes = new Map<string, Note>();
   let auto: AutoRecordSettings = clone(DEFAULT_AUTO_SETTINGS);
   let app: AppSettings = clone(DEFAULT_APP_SETTINGS);
 
@@ -40,6 +41,8 @@ export function createMemoryRepo(): Repo {
       b.deleteCandidateIds?.forEach((id) => candidates.delete(id));
       putAll(photos, b.photos, (p) => p.id);
       b.deletePhotoIds?.forEach((id) => photos.delete(id));
+      putAll(notes, b.notes, (x) => x.id);
+      b.deleteNoteIds?.forEach((id) => notes.delete(id));
     },
     async getTransaction(id) { const t = txs.get(id); return t && clone(t); },
     async listTransactions() { return values(txs); },
@@ -55,6 +58,7 @@ export function createMemoryRepo(): Repo {
     async listCategories() { return values(categories); },
     async listPaymentMethods() { return values(methods); },
     async listPhotos(txId) { return values(photos).filter((p) => p.txId === txId).sort((a, b) => a.createdAt - b.createdAt); },
+    async listNotes() { return values(notes); },
     async getBudget(month) { const x = budgets.get(month); return x && clone(x); },
     async getAutoSettings() { return clone(auto); },
     async getAppSettings() { return clone(app); },
@@ -63,7 +67,7 @@ export function createMemoryRepo(): Repo {
     async removePending(id) { pending.delete(id); },
     async clearAll() {
       txs = new Map(); refunds = new Map(); candidates = new Map(); records = new Map();
-      categories = new Map(); methods = new Map(); budgets = new Map(); pending = new Map(); photos = new Map();
+      categories = new Map(); methods = new Map(); budgets = new Map(); pending = new Map(); photos = new Map(); notes = new Map();
       auto = clone(DEFAULT_AUTO_SETTINGS); app = clone(DEFAULT_APP_SETTINGS);
     },
   };
