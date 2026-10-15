@@ -4,6 +4,8 @@ import { UndoProvider } from './components/Undo';
 import { Home } from './screens/Home';
 import { History } from './screens/History';
 import { TxEditor } from './screens/TxEditor';
+import { Stats } from './screens/Stats';
+import { BudgetSettings } from './screens/BudgetSettings';
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
               <Route path="/history" element={<History />} />
               <Route path="/tx/new" element={<TxEditor />} />
               <Route path="/tx/:id" element={<TxEditor />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/settings/budget" element={<BudgetSettings />} />
             </Routes>
           </main>
           <TabBar />
