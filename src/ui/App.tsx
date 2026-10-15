@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import { TabBar } from './components/TabBar';
 import { UndoProvider } from './components/Undo';
@@ -20,10 +20,29 @@ import { Simulator } from './screens/Simulator';
 import { Stats } from './screens/Stats';
 import { TxEditor } from './screens/TxEditor';
 import { Wipe } from './screens/Wipe';
+import { InstallSheet } from './components/InstallSheet';
+import { isStandalone } from './install';
 
 export default function App() {
   const app = useLive((r) => r.getAppSettings());
   const [unlocked, setUnlocked] = useState(false);
+  // QR 설치 주소(?install=1)로 들어왔거나 설정에서 '휴대폰에 설치하기'를 누르면 설치 안내 창을 연다.
+  const [installOpen, setInstallOpen] = useState(() => new URLSearchParams(location.search).has('install') && !isStandalone());
+  useEffect(() => {
+    const open = () => setInstallOpen(true);
+    window.addEventListener('open-install', open);
+    return () => window.removeEventListener('open-install', open);
+  }, []);
+  const closeInstall = () => {
+    setInstallOpen(false);
+    if (location.search) history.replaceState(null, '', location.pathname + location.hash);
+  };
+  const withInstall = (node: ReactNode) => (
+    <>
+      {node}
+      {installOpen && <InstallSheet onClose={closeInstall} />}
+    </>
+  );
 
   const theme = app?.theme ?? 'auto';
   useEffect(() => {
@@ -41,10 +60,10 @@ export default function App() {
   }, []);
 
   if (!app) return <p className="loading">불러오는 중…</p>;
-  if (!app.onboarded) return <Onboarding />;
+  if (!app.onboarded) return withInstall(<Onboarding />);
   if (app.lockEnabled && !unlocked) return <LockScreen app={app} onUnlock={() => setUnlocked(true)} />;
 
-  return (
+  return withInstall(
     <HashRouter>
       <UndoProvider>
         <div className="app">

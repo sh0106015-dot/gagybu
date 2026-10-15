@@ -428,3 +428,19 @@ body {
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet-backdrop { animation: none; } }
 button.fab { border: 0; cursor: pointer; font: inherit; font-size: 2rem; }
 .memo-foot { display: flex; justify-content: center; padding: 18px 0 4px; opacity: 0.9; }
+
+/* 휴대폰 설치 안내 */
+.install-sheet { text-align: left; }
+.install-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.install-head h2 { margin: 0; font-size: 1.15rem; }
+.install-lead { font-size: 1rem; margin: 10px 0; }
+.install-btn { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.install-steps { margin: 6px 0; padding-left: 22px; line-height: 2; }
+.install-steps kbd { font: inherit; font-weight: 800; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-2); }
+.ios-share { display: inline-block; padding: 0 6px; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); font-weight: 800; }
+.install-arrow { text-align: center; font-size: 2rem; color: var(--accent); margin: 0; animation: bob 1.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .install-arrow { animation: none; } }
+.install-qr { display: block; width: 220px; max-width: 70%; margin: 6px auto; border-radius: 12px; border: 1px solid var(--line); }
+.install-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; background: var(--accent-soft); border-color: var(--line-strong); }
+.install-card > span:nth-child(2) { flex: 1; }

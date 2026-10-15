@@ -4,6 +4,10 @@ import { createAppServices } from './data/app';
 import { AppCtx } from './ui/AppContext';
 import App from './ui/App';
 import './ui/styles.css';
+import { captureInstallPrompt } from './ui/install';
+
+// 설치 창 이벤트는 앱이 그려지기 전에 올 수 있어 가장 먼저 붙잡는다.
+captureInstallPrompt();
 
 const root = createRoot(document.getElementById('root')!);
 

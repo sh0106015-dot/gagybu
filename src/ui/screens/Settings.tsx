@@ -46,6 +46,11 @@ export function Settings() {
           ))}
         </fieldset>
       </section>
+      <button type="button" className="card install-card" onClick={() => window.dispatchEvent(new Event('open-install'))}>
+        <span aria-hidden="true">📱</span>
+        <span><strong>휴대폰에 설치하기</strong><span className="small muted" style={{ display: 'block' }}>QR로 열거나 버튼 한 번으로 홈 화면에 설치해요</span></span>
+        <span aria-hidden="true">›</span>
+      </button>
       <ul className="list">
         {ITEMS.map((i) => (
           <li key={i.to}><Link to={i.to} className="item"><span>{i.label}</span><span aria-hidden="true">›</span></Link></li>
