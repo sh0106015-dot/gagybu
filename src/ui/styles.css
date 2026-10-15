@@ -329,3 +329,9 @@ body {
 .nospend .sticker, .recap-head .sticker { margin-right: 4px; }
 .recap-head { display: flex; align-items: center; gap: 10px; }
 .onboard-art { display: flex; justify-content: center; margin: 8px 0 4px; }
+
+/* 하단 탭 손그림 아이콘 */
+.tab-art { display: grid; place-items: center; width: 48px; height: 34px; border-radius: 17px; transition: background 0.15s, transform 0.15s; }
+.tab:not(.active) .tab-art { opacity: 0.6; filter: saturate(0.6); }
+.tab.active .tab-art { background: var(--accent-soft); transform: translateY(-2px); }
+.tab.active .tab-label { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }

@@ -1,11 +1,20 @@
 import { INK } from './Bunny';
 
 /** 홈 메뉴용 손그림 아이콘. 갈색 외곽선 + 파스텔 면. */
-export type MenuArtName = 'write' | 'list' | 'chart' | 'inbox' | 'budget' | 'settings';
+export type MenuArtName = 'home' | 'write' | 'list' | 'chart' | 'inbox' | 'budget' | 'settings';
 
 const line = { stroke: INK, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
 const ART: Record<MenuArtName, JSX.Element> = {
+  home: (
+    <g {...line}>
+      <path d="M31 17v-7h5v11" fill="#d9a873" />
+      <path d="M11 22h26v18H11z" fill="#fff7ea" />
+      <path d="M7 24l17-14 17 14z" fill="#f7b6c2" />
+      <rect x="20" y="29" width="8" height="11" rx="1.5" fill="#f2c46b" />
+      <rect x="30" y="27" width="5" height="5" rx="1" fill="#bfe0f2" />
+    </g>
+  ),
   write: (
     <g {...line}>
       <rect x="9" y="10" width="24" height="30" rx="3" fill="#a8dcc8" />
@@ -56,9 +65,9 @@ const ART: Record<MenuArtName, JSX.Element> = {
   ),
 };
 
-export function MenuArt({ name }: { name: MenuArtName }) {
+export function MenuArt({ name, size = 40 }: { name: MenuArtName; size?: number }) {
   return (
-    <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true">
+    <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true">
       {ART[name]}
     </svg>
   );
