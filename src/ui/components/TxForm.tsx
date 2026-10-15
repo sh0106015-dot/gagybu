@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { validateTxInput, type TxInput } from '../../core/actions';
 import { parseWon } from '../../core/money';
-import type { TxType } from '../../core/model';
-import { TX_TYPE_LABEL } from '../../core/model';
+import type { PaymentKind, PaymentMethod, TxType } from '../../core/model';
+import { PAYMENT_KIND_LABEL, TX_TYPE_LABEL } from '../../core/model';
 import { useLookups } from '../hooks';
 import { today } from '../format';
 
@@ -115,7 +115,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
             <span>{type === 'transfer' ? '출발 수단' : '결제수단'}</span>
             <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)} required>
               <option value="">선택하세요 ›</option>
-              {methods.map((m) => <option key={m.id} value={m.id}>{m.name}{m.archived ? ' (보관됨)' : ''}</option>)}
+              <MethodOptions methods={methods} />
             </select>
           </label>
         </li>
@@ -125,7 +125,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
               <span>도착 수단</span>
               <select value={toPaymentMethodId} onChange={(e) => setToPaymentMethodId(e.target.value)} required>
                 <option value="">선택하세요 ›</option>
-                {methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                <MethodOptions methods={methods} />
               </select>
             </label>
           </li>
@@ -144,5 +144,22 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
       {error && <p className="error" role="alert">{error}</p>}
       <button type="submit" className="btn btn-primary btn-big" disabled={saving}>{saving ? '저장 중…' : submitLabel}</button>
     </form>
+  );
+}
+
+/** 결제수단을 신용카드·체크카드·간편결제·현금·계좌 순으로 묶어 보여준다. */
+function MethodOptions({ methods }: { methods: PaymentMethod[] }) {
+  return (
+    <>
+      {(Object.keys(PAYMENT_KIND_LABEL) as PaymentKind[]).map((kind) => {
+        const items = methods.filter((m) => m.kind === kind);
+        if (items.length === 0) return null;
+        return (
+          <optgroup key={kind} label={PAYMENT_KIND_LABEL[kind]}>
+            {items.map((m) => <option key={m.id} value={m.id}>{m.name}{m.archived ? ' (보관됨)' : ''}</option>)}
+          </optgroup>
+        );
+      })}
+    </>
   );
 }

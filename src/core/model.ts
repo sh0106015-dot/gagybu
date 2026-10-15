@@ -133,10 +133,22 @@ export interface Category {
   archived: boolean;
 }
 
+export type PaymentKind = 'credit' | 'debit' | 'card' | 'pay' | 'cash' | 'account';
+
+/** 표시 순서도 이 순서를 따른다. 'card'는 신용·체크 구분 전 데이터용. */
+export const PAYMENT_KIND_LABEL: Record<PaymentKind, string> = {
+  credit: '신용카드',
+  debit: '체크카드',
+  card: '카드',
+  pay: '간편결제',
+  cash: '현금',
+  account: '계좌',
+};
+
 export interface PaymentMethod {
   id: string;
   name: string;
-  kind: 'card' | 'cash' | 'account' | 'pay';
+  kind: PaymentKind;
   matchKeys: string[];
   sortOrder: number;
   archived: boolean;

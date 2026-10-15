@@ -12,20 +12,32 @@ export function defaultSeed(): WriteBatch {
     ...INCOME.map((name, i) => ({ id: `cat-i${i}`, name, kind: 'income' as const, sortOrder: 100 + i, archived: false })),
   ];
   const paymentMethods: PaymentMethod[] = [
-    { id: 'pm-cash', name: '현금', kind: 'cash', matchKeys: [], sortOrder: 0, archived: false },
-    { id: 'pm-account', name: '계좌', kind: 'account', matchKeys: [], sortOrder: 1, archived: false },
+    ...CARD_DEFAULTS,
+    { id: 'pm-cash', name: '현금', kind: 'cash', matchKeys: [], sortOrder: 2, archived: false },
+    { id: 'pm-account', name: '계좌', kind: 'account', matchKeys: [], sortOrder: 3, archived: false },
   ];
   return { categories, paymentMethods };
 }
 
+const CARD_DEFAULTS: PaymentMethod[] = [
+  { id: 'pm-credit', name: '신용카드', kind: 'credit', matchKeys: [], sortOrder: 0, archived: false },
+  { id: 'pm-debit', name: '체크카드', kind: 'debit', matchKeys: [], sortOrder: 1, archived: false },
+];
+
 export async function ensureSeeded(repo: Repo): Promise<void> {
-  if ((await repo.listCategories()).length > 0) return;
-  await repo.commit(defaultSeed());
+  if ((await repo.listCategories()).length === 0) {
+    await repo.commit(defaultSeed());
+    return;
+  }
+  // 기존 사용자에게도 신용·체크카드 기본 수단을 한 번만 추가한다 (이름을 바꾸거나 보관해도 다시 만들지 않음).
+  const ids = new Set((await repo.listPaymentMethods()).map((p) => p.id));
+  const missing = CARD_DEFAULTS.filter((p) => !ids.has(p.id)).map((p) => ({ ...p, sortOrder: p.sortOrder - 10 }));
+  if (missing.length) await repo.commit({ paymentMethods: missing });
 }
 
 const SAMPLE: Omit<PaymentMethod, 'sortOrder' | 'archived'>[] = [
-  { id: 'pm-sample-gana', name: '가나카드', kind: 'card', matchKeys: ['가나카드*1234'] },
-  { id: 'pm-sample-dara', name: '다라카드', kind: 'card', matchKeys: ['다라카드'] },
+  { id: 'pm-sample-gana', name: '가나카드', kind: 'credit', matchKeys: ['가나카드*1234'] },
+  { id: 'pm-sample-dara', name: '다라카드', kind: 'debit', matchKeys: ['다라카드'] },
   { id: 'pm-sample-maba', name: '마바페이', kind: 'pay', matchKeys: ['마바페이'] },
 ];
 

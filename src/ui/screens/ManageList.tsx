@@ -1,18 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import type { Category, PaymentMethod } from '../../core/model';
-import { UNCATEGORIZED_ID } from '../../core/model';
+import { PAYMENT_KIND_LABEL, UNCATEGORIZED_ID } from '../../core/model';
 import { useServices } from '../AppContext';
 import { useLookups } from '../hooks';
 import { PageHeader } from '../components/PageHeader';
 
 const CAT_KINDS = { expense: '지출', income: '수입' } as const;
-const PM_KINDS = { card: '카드', pay: '간편결제', account: '계좌', cash: '현금' } as const;
+const PM_KINDS = PAYMENT_KIND_LABEL;
 
 export function ManageList({ target }: { target: 'categories' | 'methods' }) {
   const { repo, deps } = useServices();
   const lookups = useLookups();
   const [name, setName] = useState('');
-  const [kind, setKind] = useState<string>(target === 'categories' ? 'expense' : 'card');
+  const [kind, setKind] = useState<string>(target === 'categories' ? 'expense' : 'credit');
   const [error, setError] = useState<string | null>(null);
   if (!lookups) return <p className="loading">불러오는 중…</p>;
 
@@ -81,7 +81,7 @@ export function ManageList({ target }: { target: 'categories' | 'methods' }) {
           <label className="field"><span>이름</span><input value={name} onChange={(e) => setName(e.target.value)} /></label>
           <label className="field"><span>종류</span>
             <select value={kind} onChange={(e) => setKind(e.target.value)}>
-              {Object.entries(kinds).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              {Object.entries(kinds).filter(([k]) => k !== 'card').map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </label>
         </div>
