@@ -1,6 +1,6 @@
-import { summarizeMonth } from './budget';
+import { summarizeMonth, type MonthSummary } from './budget';
 import { shiftMonth } from './dates';
-import type { PaymentKind, PaymentMethod, Refund, Transaction } from './model';
+import type { Budget, PaymentKind, PaymentMethod, Refund, Transaction } from './model';
 import { PAYMENT_KIND_LABEL } from './model';
 import { periodDates, periodKey } from './period';
 
@@ -73,4 +73,42 @@ export function spendByPaymentKind(
   return (Object.keys(PAYMENT_KIND_LABEL) as PaymentKind[])
     .filter((k) => sums.has(k))
     .map((kind) => ({ kind, ...sums.get(kind)! }));
+}
+
+export interface DayTotal {
+  date: string;
+  income: number;
+  expense: number;
+  refund: number;
+  /** 그날 기록된 거래 수 (이체 포함) */
+  count: number;
+}
+
+/** 달력 보기용. 기간의 모든 날짜에 대해 수입·지출·환불 합계를 만든다. 이체는 합계에서 뺀다. */
+export function dailyTotals(month: string, txs: Transaction[], refunds: Refund[], startDay: number): DayTotal[] {
+  const map = new Map<string, DayTotal>(
+    periodDates(month, startDay).map((date) => [date, { date, income: 0, expense: 0, refund: 0, count: 0 }]),
+  );
+  for (const t of txs) {
+    const d = map.get(t.date);
+    if (!d) continue;
+    d.count++;
+    if (t.type === 'income') d.income += t.amount;
+    if (t.type === 'expense') d.expense += t.amount;
+  }
+  for (const r of refunds) {
+    const d = map.get(r.date);
+    if (d) d.refund += r.amount;
+  }
+  return [...map.values()];
+}
+
+/** 카테고리별 예산 대비 순지출. 예산이 0이거나 없는 카테고리는 뺀다. */
+export function categoryBudgetStatus(summary: MonthSummary, budget: Budget | undefined) {
+  return Object.entries(budget?.categories ?? {})
+    .filter(([, amount]) => amount > 0)
+    .map(([categoryId, amount]) => {
+      const spent = summary.byCategory.find((c) => c.categoryId === categoryId)?.amount ?? 0;
+      return { categoryId, budget: amount, spent, remaining: amount - spent, rate: spent / amount };
+    });
 }

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { summarizeDay, summarizeMonth } from '../../core/budget';
 import { shiftMonth } from '../../core/dates';
-import { noSpendDays } from '../../core/insights';
+import { categoryBudgetStatus, noSpendDays } from '../../core/insights';
 import { formatWon } from '../../core/money';
 import { daysIntoPeriod, periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
@@ -32,6 +32,7 @@ export function Home() {
   const s = summarizeMonth(month, data.txs, data.refunds, data.budget, startDay);
   const d = summarizeDay(date, data.txs, data.refunds);
   const ns = noSpendDays(month, data.txs, startDay, date);
+  const overCats = categoryBudgetStatus(s, data.budget).filter((c) => c.remaining < 0 || c.rate >= 0.8);
   const showRecap = daysIntoPeriod(date, startDay) <= RECAP_DAYS;
   const prev = summarizeMonth(prevMonth, data.txs, data.refunds, data.prevBudget, startDay);
   const prevTop = prev.byCategory.find((c) => c.amount > 0);
@@ -118,6 +119,12 @@ export function Home() {
 
       <section className="card">
         <BudgetBar summary={s} />
+        {overCats.length > 0 && (
+          <p className="small" style={{ margin: '6px 0 0' }}>
+            <Link to="/stats">카테고리 예산 주의</Link>:{' '}
+            {overCats.map((c) => `${lookups.catName(c.categoryId)} ${c.remaining < 0 ? '초과' : `${Math.round(c.rate * 100)}%`}`).join(' · ')}
+          </p>
+        )}
       </section>
 
       <nav className="menu-grid" aria-label="바로가기">

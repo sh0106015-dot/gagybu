@@ -157,6 +157,8 @@ export interface PaymentMethod {
 export interface Budget {
   month: string;
   total: number;
+  /** 카테고리 id → 예산 (원). 0이거나 없으면 예산 없음. */
+  categories?: Record<string, number>;
 }
 
 export interface AllowedSource {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { monthlyTrend, summarizeMonth } from '../../core/budget';
 import { shiftMonth } from '../../core/dates';
-import { categoryVsAverage, noSpendDays, spendByPaymentKind } from '../../core/insights';
+import { categoryBudgetStatus, categoryVsAverage, noSpendDays, spendByPaymentKind } from '../../core/insights';
 import { PAYMENT_KIND_LABEL } from '../../core/model';
 import { formatWon } from '../../core/money';
 import { periodLabel } from '../../core/period';
@@ -31,6 +31,7 @@ export function Stats() {
   const positives = s.byCategory.filter((c) => c.amount > 0);
   const vsAvg = categoryVsAverage(month, data.txs, data.refunds, startDay);
   const ns = noSpendDays(month, data.txs, startDay, today());
+  const catBudgets = categoryBudgetStatus(s, data.budget);
   const byKind = spendByPaymentKind(month, data.txs, data.refunds, lookups.methods, startDay);
   const kindTotal = byKind.reduce((s2, k) => s2 + Math.max(0, k.amount), 0);
   const short = (m: string) => (startDay === 1 ? `${Number(m.slice(5))}월` : `${Number(m.slice(5))}/${startDay}~`);
@@ -83,6 +84,27 @@ export function Stats() {
           })
         )}
       </section>
+
+      {catBudgets.length > 0 && (
+        <section className="card">
+          <h2>카테고리 예산</h2>
+          {catBudgets.map((c) => {
+            const pct = Math.round(c.rate * 100);
+            const over = c.remaining < 0;
+            return (
+              <div key={c.categoryId} style={{ margin: '8px 0' }}>
+                <div className="budget-row small">
+                  <span><strong>{lookups.catName(c.categoryId)}</strong> {formatWon(c.spent)} / {formatWon(c.budget)}</span>
+                  <span className={over ? 'neg' : 'refund'}>{over ? `${formatWon(-c.remaining)} 초과` : `${formatWon(c.remaining)} 남음`}</span>
+                </div>
+                <div className={`bar ${over ? 'bar-over' : pct >= 80 ? 'bar-warn' : ''}`} role="progressbar" aria-label={`${lookups.catName(c.categoryId)} 예산 사용률`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(pct, 100)}>
+                  <span style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       <section className="card">
         <h2>결제수단별 지출</h2>

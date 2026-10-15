@@ -5,7 +5,9 @@ import { formatWon } from '../../core/money';
 import { RECORD_METHOD_LABEL, TX_TYPE_LABEL } from '../../core/model';
 import { periodLabel } from '../../core/period';
 import { useLive, useLookups, useStartDay } from '../hooks';
-import { currentPeriod, dayLabel, sortTxDesc } from '../format';
+import { dailyTotals } from '../../core/insights';
+import { currentPeriod, dayLabel, sortTxDesc, today } from '../format';
+import { CalendarView } from '../components/CalendarView';
 import { EMPTY_FILTER, filterTransactions, type TxFilter } from '../filter';
 import { MonthNav } from '../components/MonthNav';
 import { PageHeader } from '../components/PageHeader';
@@ -16,12 +18,19 @@ export function History() {
   const [picked, setMonth] = useState<string | null>(null);
   const [f, setF] = useState<TxFilter>(EMPTY_FILTER);
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [day, setDay] = useState<string | null>(null);
   const lookups = useLookups();
   const data = useLive(async (repo) => ({ txs: await repo.listTransactions(), refunds: await repo.listRefunds() }));
   if (!data || !lookups || !startDay) return <p className="loading">불러오는 중…</p>;
   const month = picked ?? currentPeriod(startDay);
 
-  const list = filterTransactions(data.txs, month, f, startDay).sort(sortTxDesc);
+  const filtered = filterTransactions(data.txs, month, f, startDay).sort(sortTxDesc);
+  const list = view === 'calendar' ? (day ? filtered.filter((t) => t.date === day) : []) : filtered;
+  const changeMonth = (m: string) => {
+    setMonth(m);
+    setDay(null);
+  };
   const refunded = new Map<string, number>();
   data.refunds.forEach((r) => refunded.set(r.originalTxId, (refunded.get(r.originalTxId) ?? 0) + r.amount));
   const groups = new Map<string, typeof list>();
@@ -33,13 +42,27 @@ export function History() {
   return (
     <div className="page">
       <PageHeader title="가계부 조회" right={<Link to="/tx/new" className="pill-btn">쓰기</Link>} />
-      <MonthNav month={month} startDay={startDay} onChange={setMonth} />
+      <MonthNav month={month} startDay={startDay} onChange={changeMonth} />
 
       <section className="card trio" aria-label={`${periodLabel(month, startDay)} 합계`}>
         <div><span className="label">월간 수입</span><strong className="pos">{formatWon(ms.income)}</strong></div>
         <div><span className="label">월간 지출</span><strong className="neg">{formatWon(ms.expense)}</strong></div>
         <div><span className="label">환불</span><strong className="refund">{formatWon(ms.refund)}</strong></div>
       </section>
+
+      <fieldset className="segmented" style={{ margin: '8px 0', padding: 0 }}>
+        <legend className="visually-hidden">보기 방식</legend>
+        {(['list', 'calendar'] as const).map((v) => (
+          <label key={v}>
+            <input type="radio" name="view" checked={view === v} onChange={() => setView(v)} />
+            {v === 'list' ? '목록' : '달력'}
+          </label>
+        ))}
+      </fieldset>
+
+      {view === 'calendar' && (
+        <CalendarView days={dailyTotals(month, filtered, data.refunds, startDay)} selected={day} today={today()} onSelect={setDay} />
+      )}
 
       <div className="form" style={{ marginTop: 8 }}>
         <label className="field">
@@ -81,7 +104,7 @@ export function History() {
       </div>
 
       {list.length === 0 ? (
-        <p className="empty">이 달에 해당하는 거래가 없어요.</p>
+        <p className="empty">{view === 'calendar' ? (day ? '이 날은 거래가 없어요.' : '날짜를 누르면 그날 거래가 보여요.') : '이 달에 해당하는 거래가 없어요.'}</p>
       ) : (
         [...groups.entries()].map(([date, items]) => {
           const spend = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);

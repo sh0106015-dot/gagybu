@@ -250,3 +250,17 @@ pre.excerpt { white-space: pre-wrap; background: var(--surface-2); border: 1px s
 .check-row input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); }
 .vs-up { color: var(--neg); font-weight: 700; }
 .vs-down { color: var(--refund); font-weight: 700; }
+
+/* 달력 보기 */
+.cal { padding: 10px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-head { text-align: center; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; min-height: 56px; padding: 4px 1px;
+  border: 1px solid transparent; border-radius: 10px; background: var(--surface-2); cursor: pointer; font: inherit; color: inherit;
+}
+.cal-day:hover { border-color: var(--line-strong); }
+.cal-today { border-color: var(--accent); }
+.cal-selected { background: var(--accent-soft); border-color: var(--accent); }
+.cal-num { font-size: 0.8rem; font-weight: 700; }
+.cal-amt { font-size: 0.66rem; font-weight: 700; line-height: 1.1; white-space: nowrap; }

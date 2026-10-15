@@ -6,7 +6,7 @@ import { suggestBudget } from '../../core/insights';
 import { formatWon, parseWon } from '../../core/money';
 import { periodLabel } from '../../core/period';
 import { useServices } from '../AppContext';
-import { useLive } from '../hooks';
+import { useLive, useLookups } from '../hooks';
 import { currentPeriod } from '../format';
 import { PageHeader } from '../components/PageHeader';
 
@@ -38,16 +38,22 @@ export function BudgetSettings() {
   const [income, setIncome] = useState('');
   const [saving, setSaving] = useState('');
   const [fixed, setFixed] = useState('');
+  const [catTexts, setCatTexts] = useState<Record<string, string>>({});
+  const lookups = useLookups();
 
   useEffect(() => {
     if (!data) return;
-    if (data.cur) setText(toText(data.cur.total));
+    if (data.cur) {
+      setText(toText(data.cur.total));
+      setCatTexts(Object.fromEntries(Object.entries(data.cur.categories ?? {}).map(([k, v]) => [k, toText(v)])));
+    }
     setIncome((v) => v || toText(data.lastIncome));
     setFixed((v) => v || toText(data.avgFixed));
   }, [data?.cur, data?.lastIncome, data?.avgFixed]);
 
-  if (!data) return <p className="loading">불러오는 중…</p>;
+  if (!data || !lookups) return <p className="loading">불러오는 중…</p>;
   const { month, startDay } = data;
+  const catSum = Object.values(catTexts).reduce((s, v) => s + (parseWon(v) ?? 0), 0);
   const plan = suggestBudget({ income: parseWon(income) ?? 0, saving: parseWon(saving) ?? 0, fixed: parseWon(fixed) ?? 0 });
 
   const save = async (e: FormEvent) => {
@@ -57,7 +63,12 @@ export function BudgetSettings() {
       setError('예산을 1원 이상 입력하세요');
       return;
     }
-    await repo.commit({ budgets: [{ month, total }] });
+    const categories: Record<string, number> = {};
+    for (const [id, v] of Object.entries(catTexts)) {
+      const n = parseWon(v);
+      if (n && n > 0) categories[id] = n;
+    }
+    await repo.commit({ budgets: [{ month, total, categories }] });
     navigate(-1);
   };
 
@@ -90,10 +101,40 @@ export function BudgetSettings() {
           <input inputMode="numeric" value={text} onChange={(e) => setText(onlyDigits(e.target.value))} />
         </label>
         {data.prev && !data.cur && (
-          <button type="button" className="btn" onClick={() => setText(toText(data.prev!.total))}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setText(toText(data.prev!.total));
+              setCatTexts(Object.fromEntries(Object.entries(data.prev!.categories ?? {}).map(([k, v]) => [k, toText(v)])));
+            }}
+          >
             지난달과 같게 ({formatWon(data.prev.total)})
           </button>
         )}
+        <details className="cat-budgets" open={Object.keys(catTexts).length > 0}>
+          <summary>카테고리별 예산 (선택)</summary>
+          <ul className="form-list" style={{ marginTop: 8 }}>
+            {lookups.categories.filter((c) => c.kind === 'expense' && !c.archived).map((c) => (
+              <li key={c.id}>
+                <label className="form-row">
+                  <span>{c.name}</span>
+                  <input
+                    inputMode="numeric"
+                    placeholder="없음"
+                    value={catTexts[c.id] ?? ''}
+                    onChange={(e) => setCatTexts({ ...catTexts, [c.id]: onlyDigits(e.target.value) })}
+                  />
+                </label>
+              </li>
+            ))}
+          </ul>
+          {catSum > 0 && (
+            <p className={`small ${catSum > (parseWon(text) ?? 0) ? 'error' : 'muted'}`} style={{ margin: '6px 0 0' }}>
+              카테고리 예산 합계 {formatWon(catSum)}{catSum > (parseWon(text) ?? 0) ? ' — 전체 예산보다 커요' : ''}
+            </p>
+          )}
+        </details>
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" className="btn btn-primary btn-big">저장</button>
       </form>
@@ -117,7 +158,7 @@ export function BudgetSettings() {
         </button>
       </section>
 
-      <p className="small muted">예산은 기간마다 따로 저장돼요. 카테고리별 예산은 다음 버전에서 제공할 예정이에요.</p>
+      <p className="small muted">예산은 기간마다 따로 저장돼요. 카테고리별 예산은 비워 두면 따로 관리하지 않아요.</p>
     </div>
   );
 }

@@ -111,3 +111,37 @@ describe('spendByPaymentKind', () => {
     ]);
   });
 });
+
+describe('dailyTotals (calendar view)', () => {
+  it('gives every day of the period with income, expense and refunds', async () => {
+    const { dailyTotals } = await import('../../src/core/insights');
+    const txs = [
+      tx({ id: 'a', amount: 12000, date: '2026-10-02' }),
+      tx({ id: 'b', amount: 3000, date: '2026-10-02' }),
+      tx({ id: 'c', type: 'income', amount: 50000, date: '2026-10-03' }),
+      tx({ id: 'd', type: 'transfer', amount: 9000, date: '2026-10-03', categoryId: '', toPaymentMethodId: 'q' }),
+    ];
+    const refunds: Refund[] = [{ id: 'r', originalTxId: 'a', amount: 2000, date: '2026-10-04', createdAt: 1 }];
+    const days = dailyTotals('2026-10', txs, refunds, 1);
+    expect(days).toHaveLength(31);
+    expect(days[1]).toEqual({ date: '2026-10-02', income: 0, expense: 15000, refund: 0, count: 2 });
+    expect(days[2]).toEqual({ date: '2026-10-03', income: 50000, expense: 0, refund: 0, count: 2 });
+    expect(days[3]).toEqual({ date: '2026-10-04', income: 0, expense: 0, refund: 2000, count: 0 });
+  });
+});
+
+describe('categoryBudgetStatus', () => {
+  it('compares category budgets with net spending', async () => {
+    const { categoryBudgetStatus } = await import('../../src/core/insights');
+    const s = summarizeMonth('2026-10', [
+      tx({ categoryId: 'food', amount: 450000, date: '2026-10-03' }),
+      tx({ categoryId: 'cafe', amount: 20000, date: '2026-10-03' }),
+    ], []);
+    expect(categoryBudgetStatus(s, { month: '2026-10', total: 1000000, categories: { food: 400000, cafe: 50000, shop: 100000, zero: 0 } })).toEqual([
+      { categoryId: 'food', budget: 400000, spent: 450000, remaining: -50000, rate: 1.125 },
+      { categoryId: 'cafe', budget: 50000, spent: 20000, remaining: 30000, rate: 0.4 },
+      { categoryId: 'shop', budget: 100000, spent: 0, remaining: 100000, rate: 0 },
+    ]);
+    expect(categoryBudgetStatus(s, undefined)).toEqual([]);
+  });
+});
