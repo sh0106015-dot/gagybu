@@ -27,8 +27,8 @@ export function TxEditor() {
   if (!id) {
     return (
       <div className="page">
-        <PageHeader title="거래 추가" back />
-        <TxForm initial={{}} submitLabel="저장" onSubmit={async (i) => { await saveManualTransaction(i, deps); navigate(-1); }} />
+        <PageHeader title="가계부 입력" back />
+        <TxForm initial={{}} submitLabel="입력" onSubmit={async (i) => { await saveManualTransaction(i, deps); navigate(-1); }} />
       </div>
     );
   }

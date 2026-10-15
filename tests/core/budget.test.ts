@@ -43,3 +43,17 @@ describe('summarizeMonth', () => {
     ]);
   });
 });
+
+describe('summarizeDay', () => {
+  it('sums one day excluding transfers, refunds by refund date', async () => {
+    const { summarizeDay } = await import('../../src/core/budget');
+    const day = [
+      tx({ id: 'x1', amount: 4000, date: '2026-10-15' }),
+      tx({ id: 'x2', type: 'income', amount: 50000, date: '2026-10-15' }),
+      tx({ id: 'x3', type: 'transfer', amount: 9000, date: '2026-10-15', categoryId: '', toPaymentMethodId: 'q' }),
+      tx({ id: 'x4', amount: 7000, date: '2026-10-14' }),
+    ];
+    const refunds: Refund[] = [{ id: 'r1', originalTxId: 'x4', amount: 1000, date: '2026-10-15', createdAt: 1 }];
+    expect(summarizeDay('2026-10-15', day, refunds)).toEqual({ income: 50000, expense: 4000, refund: 1000, netSpend: 3000 });
+  });
+});

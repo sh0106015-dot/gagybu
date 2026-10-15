@@ -21,8 +21,8 @@ export function TxRow({ tx, refunded, catName, pmName }: {
           </span>
         </div>
         <div className="tx-amount">
-          <span className={tx.type === 'income' ? 'pos' : undefined}>{signedAmount(tx)}</span>
-          {refunded ? <span className="small pos">환불 {formatWon(refunded)}</span> : null}
+          <span className={tx.type === 'income' ? 'pos' : tx.type === 'expense' ? 'neg' : undefined}>{signedAmount(tx)}</span>
+          {refunded ? <span className="small refund">환불 {formatWon(refunded)}</span> : null}
         </div>
       </Link>
     </li>

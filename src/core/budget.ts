@@ -55,6 +55,18 @@ export function summarizeMonth(month: string, txs: Transaction[], refunds: Refun
   };
 }
 
+export function summarizeDay(date: string, txs: Transaction[], refunds: Refund[]) {
+  let income = 0;
+  let expense = 0;
+  for (const t of txs) {
+    if (t.date !== date) continue;
+    if (t.type === 'income') income += t.amount;
+    if (t.type === 'expense') expense += t.amount;
+  }
+  const refund = refunds.filter((r) => r.date === date).reduce((s, r) => s + r.amount, 0);
+  return { income, expense, refund, netSpend: expense - refund };
+}
+
 export function monthlyTrend(endMonth: string, count: number, txs: Transaction[], refunds: Refund[]) {
   return Array.from({ length: count }, (_, i) => {
     const s = summarizeMonth(shiftMonth(endMonth, i - count + 1), txs, refunds);

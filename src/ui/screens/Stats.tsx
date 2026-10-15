@@ -4,6 +4,7 @@ import { shiftMonth } from '../../core/dates';
 import { formatWon } from '../../core/money';
 import { useLive, useLookups } from '../hooks';
 import { currentMonth, monthLabel } from '../format';
+import { MonthNav } from '../components/MonthNav';
 import { PageHeader } from '../components/PageHeader';
 
 export function Stats() {
@@ -26,15 +27,11 @@ export function Stats() {
   return (
     <div className="page">
       <PageHeader title="통계" />
-      <div className="month-nav">
-        <button type="button" className="icon-btn" aria-label="이전 달" onClick={() => setMonth(shiftMonth(month, -1))}>‹</button>
-        <strong>{monthLabel(month)}</strong>
-        <button type="button" className="icon-btn" aria-label="다음 달" onClick={() => setMonth(shiftMonth(month, 1))}>›</button>
-      </div>
+      <MonthNav month={month} onChange={setMonth} />
 
       <section className="card">
-        <div className="budget-row"><span>지출</span><strong>{formatWon(s.expense)}</strong></div>
-        <div className="budget-row"><span>환불</span><strong className="pos">-{formatWon(s.refund)}</strong></div>
+        <div className="budget-row"><span>지출</span><strong className="neg">{formatWon(s.expense)}</strong></div>
+        <div className="budget-row"><span>환불</span><strong className="refund">-{formatWon(s.refund)}</strong></div>
         <div className="budget-row"><span>순지출</span><strong>{formatWon(s.netSpend)}</strong></div>
         <div className="budget-row"><span>수입</span><strong className="pos">{formatWon(s.income)}</strong></div>
         <p className="small muted">

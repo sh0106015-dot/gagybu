@@ -64,7 +64,7 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <fieldset className="segmented" style={{ border: 0, padding: 0, margin: 0 }}>
+      <fieldset className="tabs-big">
         <legend className="visually-hidden">유형</legend>
         {(['expense', 'income', 'transfer'] as const).map((t) => (
           <label key={t}>
@@ -74,62 +74,65 @@ export function TxForm({ initial, submitLabel, onSubmit }: {
         ))}
       </fieldset>
 
-      <label className="field">
-        <span>금액 (원)</span>
-        <input
-          inputMode="numeric"
-          autoComplete="off"
-          value={amount}
-          onChange={(e) => {
-            const digits = e.target.value.replace(/\D/g, '');
-            setAmount(digits ? Number(digits).toLocaleString('ko-KR') : '');
-          }}
-          placeholder="0"
-          required
-        />
-      </label>
-
-      <div className="row">
-        <label className="field"><span>날짜</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></label>
-        <label className="field"><span>시각 (선택)</span><input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label>
-      </div>
-
-      {type !== 'transfer' && (
-        <label className="field"><span>가맹점·내용 (선택)</span><input value={merchant} onChange={(e) => setMerchant(e.target.value)} /></label>
-      )}
-
-      {type !== 'transfer' && (
-        <label className="field">
-          <span>카테고리</span>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-            <option value="">선택하세요</option>
-            {cats.map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? ' (보관됨)' : ''}</option>)}
-          </select>
-        </label>
-      )}
-
-      <label className="field">
-        <span>{type === 'transfer' ? '출발 수단' : '결제수단'}</span>
-        <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)} required>
-          <option value="">선택하세요</option>
-          {methods.map((m) => <option key={m.id} value={m.id}>{m.name}{m.archived ? ' (보관됨)' : ''}</option>)}
-        </select>
-      </label>
-
-      {type === 'transfer' && (
-        <label className="field">
-          <span>도착 수단</span>
-          <select value={toPaymentMethodId} onChange={(e) => setToPaymentMethodId(e.target.value)} required>
-            <option value="">선택하세요</option>
-            {methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
-      )}
-
-      <label className="field"><span>메모 (선택)</span><textarea rows={2} value={memo} onChange={(e) => setMemo(e.target.value)} /></label>
+      <ul className="form-list">
+        <li>
+          <label className="form-row">
+            <span>금액 (원)</span>
+            <input
+              className="amount-input"
+              inputMode="numeric"
+              autoComplete="off"
+              value={amount}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 13);
+                setAmount(digits ? Number(digits).toLocaleString('ko-KR') : '');
+              }}
+              placeholder="0"
+              required
+            />
+          </label>
+        </li>
+        <li><label className="form-row"><span>날짜</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></label></li>
+        <li><label className="form-row"><span>시각 (선택)</span><input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label></li>
+        {type !== 'transfer' && (
+          <li><label className="form-row"><span>가맹점·내용</span><input value={merchant} placeholder="선택" onChange={(e) => setMerchant(e.target.value)} /></label></li>
+        )}
+        {type !== 'transfer' && (
+          <li>
+            <label className="form-row">
+              <span>카테고리</span>
+              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                <option value="">선택하세요 ›</option>
+                {cats.map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? ' (보관됨)' : ''}</option>)}
+              </select>
+            </label>
+          </li>
+        )}
+        <li>
+          <label className="form-row">
+            <span>{type === 'transfer' ? '출발 수단' : '결제수단'}</span>
+            <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)} required>
+              <option value="">선택하세요 ›</option>
+              {methods.map((m) => <option key={m.id} value={m.id}>{m.name}{m.archived ? ' (보관됨)' : ''}</option>)}
+            </select>
+          </label>
+        </li>
+        {type === 'transfer' && (
+          <li>
+            <label className="form-row">
+              <span>도착 수단</span>
+              <select value={toPaymentMethodId} onChange={(e) => setToPaymentMethodId(e.target.value)} required>
+                <option value="">선택하세요 ›</option>
+                {methods.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+          </li>
+        )}
+        <li><label className="form-row"><span>메모</span><textarea rows={2} value={memo} placeholder="선택" onChange={(e) => setMemo(e.target.value)} /></label></li>
+      </ul>
 
       {error && <p className="error" role="alert">{error}</p>}
-      <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '저장 중…' : submitLabel}</button>
+      <button type="submit" className="btn btn-primary btn-big" disabled={saving}>{saving ? '저장 중…' : submitLabel}</button>
     </form>
   );
 }

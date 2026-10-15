@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { shiftMonth } from '../../core/dates';
+import { Link } from 'react-router-dom';
+import { summarizeMonth } from '../../core/budget';
 import { formatWon } from '../../core/money';
 import { RECORD_METHOD_LABEL, TX_TYPE_LABEL } from '../../core/model';
 import { useLive, useLookups } from '../hooks';
 import { currentMonth, dayLabel, monthLabel, sortTxDesc } from '../format';
 import { EMPTY_FILTER, filterTransactions, type TxFilter } from '../filter';
+import { MonthNav } from '../components/MonthNav';
 import { PageHeader } from '../components/PageHeader';
 import { TxRow } from '../components/TxRow';
 
@@ -23,15 +25,18 @@ export function History() {
   list.forEach((t) => groups.set(t.date, [...(groups.get(t.date) ?? []), t]));
   const set = <K extends keyof TxFilter>(k: K, v: TxFilter[K]) => setF({ ...f, [k]: v });
   const activeFilters = [f.type, f.categoryId, f.paymentMethodId, f.recordMethod].filter(Boolean).length;
+  const ms = summarizeMonth(month, data.txs, data.refunds);
 
   return (
     <div className="page">
-      <PageHeader title="내역" />
-      <div className="month-nav">
-        <button type="button" className="icon-btn" aria-label="이전 달" onClick={() => setMonth(shiftMonth(month, -1))}>‹</button>
-        <strong>{monthLabel(month)}</strong>
-        <button type="button" className="icon-btn" aria-label="다음 달" onClick={() => setMonth(shiftMonth(month, 1))}>›</button>
-      </div>
+      <PageHeader title="가계부 조회" right={<Link to="/tx/new" className="pill-btn">쓰기</Link>} />
+      <MonthNav month={month} onChange={setMonth} />
+
+      <section className="card trio" aria-label={`${monthLabel(month)} 합계`}>
+        <div><span className="label">월간 수입</span><strong className="pos">{formatWon(ms.income)}</strong></div>
+        <div><span className="label">월간 지출</span><strong className="neg">{formatWon(ms.expense)}</strong></div>
+        <div><span className="label">환불</span><strong className="refund">{formatWon(ms.refund)}</strong></div>
+      </section>
 
       <div className="form" style={{ marginTop: 8 }}>
         <label className="field">
@@ -77,9 +82,18 @@ export function History() {
       ) : (
         [...groups.entries()].map(([date, items]) => {
           const spend = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+          const income = items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+          const [y, m, dd] = date.split('-').map(Number);
+          const wd = new Date(y, m - 1, dd).getDay();
           return (
-            <section key={date}>
-              <div className="day-head"><span>{dayLabel(date)}</span><span>지출 {formatWon(spend)}</span></div>
+            <section key={date} className="card day-card">
+              <div className="day-head">
+                <span className={`day-title ${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''}`}>{dayLabel(date)}</span>
+                <span className="day-sum">
+                  {income > 0 && <span className="pos">수입 +{formatWon(income)}</span>}
+                  <span className="neg">지출 -{formatWon(spend)}</span>
+                </span>
+              </div>
               <ul className="tx-list">
                 {items.map((t) => (
                   <TxRow key={t.id} tx={t} refunded={refunded.get(t.id)} catName={lookups.catName} pmName={lookups.pmName} />

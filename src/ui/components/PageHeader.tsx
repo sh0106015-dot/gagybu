@@ -5,11 +5,13 @@ export function PageHeader({ title, back, right }: { title: string; back?: boole
   const navigate = useNavigate();
   return (
     <header className="page-header">
-      {back && (
-        <button type="button" className="icon-btn" aria-label="뒤로" onClick={() => navigate(-1)}>
-          ←
-        </button>
-      )}
+      <div className="page-header-left">
+        {back && (
+          <button type="button" className="pill-btn" onClick={() => navigate(-1)}>
+            뒤로
+          </button>
+        )}
+      </div>
       <h1>{title}</h1>
       <div className="page-header-right">{right}</div>
     </header>
