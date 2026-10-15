@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // GitHub Pages(https://아이디.github.io/저장소/)에서는 배포 작업이 BASE_PATH=/저장소/ 를 넘겨준다.
+  base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
     VitePWA({
